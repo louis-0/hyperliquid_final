@@ -46,7 +46,7 @@ STREAM_CHANNELS = ["l2Book", "trades", "bbo"]
 # Dedicated activeAssetCtx subscription for the chassis universe.
 # Own connection so a ctx disconnect doesn't kill the main capture.
 # One ctx push contains funding, oracle/mark px, premium, OI. Pushed every few seconds.
-CTX_COINS = ["BTC", "ETH", "SOL", "NEAR", "HYPE"]
+CTX_COINS = ["BTC", "ETH", "SOL", "NEAR", "HYPE", "ZEC", "XMR"]
 CTX_CHANNELS = ["activeAssetCtx"]
 
 # Full channels list for startup logging / buffer summary
