@@ -1,0 +1,5 @@
+websockets>=12.0   # WS daemon
+pandas>=2.0        # buffer + parquet writes
+pyarrow>=14.0      # parquet backend
+duckdb>=0.10       # queries
+requests>=2.31     # REST fetcher
