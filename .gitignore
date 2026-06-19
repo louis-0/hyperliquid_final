@@ -1,0 +1,28 @@
+# Captured live data (NOT uploaded to repo since large folder; see data_sample/ instead)
+data/
+
+# Logs from the live daemon
+logs/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*~
