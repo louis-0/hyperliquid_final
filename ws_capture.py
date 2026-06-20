@@ -43,10 +43,19 @@ COIN_GROUPS = [
 COINS = [c for g in COIN_GROUPS for c in g]  # flat for buffer indexing
 STREAM_CHANNELS = ["l2Book", "trades", "bbo"]
 
-# Dedicated activeAssetCtx subscription for the chassis universe.
-# Own connection so a ctx disconnect doesn't kill the main capture.
+# Dedicated activeAssetCtx subscriptions for the full universe.
+# Own connections so a ctx disconnect doesn't kill the main capture.
 # One ctx push contains funding, oracle/mark px, premium, OI. Pushed every few seconds.
-CTX_COINS = ["BTC", "ETH", "SOL", "NEAR", "HYPE", "ZEC", "XMR"]
+# Split into two groups for the same ~21-24 sub-per-connection tolerance.
+CTX_GROUPS = [
+    # Group 1: 7 crypto perps + 5 xyz indices/commodities
+    ["BTC", "ETH", "SOL", "NEAR", "HYPE", "ZEC", "XMR",
+     "xyz:SP500", "xyz:XYZ100", "xyz:BRENTOIL", "xyz:GOLD", "xyz:SILVER"],
+    # Group 2: xyz single-name stocks
+    ["xyz:NVDA", "xyz:AMD", "xyz:MU", "xyz:MRVL", "xyz:SNDK", "xyz:INTC",
+     "xyz:SPCX", "xyz:GOOGL", "xyz:MSFT", "xyz:META", "xyz:AAPL", "xyz:TSLA",
+     "xyz:ORCL", "xyz:MSTR", "xyz:CRCL"],
+]
 CTX_CHANNELS = ["activeAssetCtx"]
 
 # Full channels list for startup logging / buffer summary
@@ -293,16 +302,16 @@ async def main() -> None:
     signal.signal(signal.SIGTERM, request_shutdown)
     OUT_BASE.mkdir(parents=True, exist_ok=True)
     log(f"=== Hyperliquid WS capture -> {OUT_BASE} ===")
-    # Build group list: stream channels per existing coin group, plus a
-    # dedicated activeAssetCtx group for the chassis universe.
+    # Build group list: stream channels per coin group, plus the activeAssetCtx groups.
     groups: list[tuple[list[str], list[str]]] = [
         (g, STREAM_CHANNELS) for g in COIN_GROUPS
+    ] + [
+        (g, CTX_CHANNELS) for g in CTX_GROUPS
     ]
-    groups.append((CTX_COINS, CTX_CHANNELS))
     total_subs = sum(len(c) * len(ch) for c, ch in groups)
     log(f"  total assets : {len(COINS)}  ({len(groups)} connection groups)")
     log(f"  stream chans : {STREAM_CHANNELS}")
-    log(f"  ctx group    : {CTX_CHANNELS} x {CTX_COINS}")
+    log(f"  ctx groups   : {len(CTX_GROUPS)} x {CTX_CHANNELS}")
     log(f"  total subs   : {total_subs}")
     for i, (coins, channels) in enumerate(groups):
         log(f"  group {i}: {len(coins)} coins x {len(channels)} channels "
