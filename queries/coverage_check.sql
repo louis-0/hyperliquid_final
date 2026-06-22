@@ -11,7 +11,8 @@ UNION ALL
 SELECT 'marks', coin, COUNT(*), MIN(ts), MAX(ts)
 FROM read_parquet('marks/*.parquet') GROUP BY coin
 UNION ALL
-SELECT 'ws_trades', coin, COUNT(*), epoch_ms(MIN(captured_ms)), epoch_ms(MAX(captured_ms))
+-- ws_trades counts unique tids (deduplicating WebSocket reconnect replays)
+SELECT 'ws_trades', coin, COUNT(DISTINCT tid), epoch_ms(MIN(captured_ms)), epoch_ms(MAX(captured_ms))
 FROM read_parquet('ws/*/trades/*/*.parquet') GROUP BY coin
 UNION ALL
 SELECT 'ws_l2book', coin, COUNT(*), epoch_ms(MIN(captured_ms)), epoch_ms(MAX(captured_ms))
