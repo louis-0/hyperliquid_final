@@ -40,12 +40,14 @@ Writes `data/funding/{coin}.parquet` and `data/marks/{coin}.parquet`. Idempotent
 
 ### Queries
 
-From `data_sample/` (or `data/`):
-
 ```bash
+# coverage_check.sql, run from data_sample/ (or data/)
 cd data_sample
-duckdb -c ".read ../queries/coverage_check.sql"
-python3 ../queries/arch_replication.py data_sample
+python3 -c "import duckdb; duckdb.sql(open('../queries/coverage_check.sql').read()).show()"
+cd ..
+
+# arch_replication.py takes the data root as argument
+python3 queries/arch_replication.py data_sample
 ```
 
 `coverage_check.sql` reports row counts and time spans per (channel, coin).
