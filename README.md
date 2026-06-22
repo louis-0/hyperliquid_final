@@ -32,11 +32,13 @@ Writes `data/ws/{coin}/{channel}/{YYYY-MM-DD}/{HH}.parquet`, rotating hourly. St
 ### REST history fetcher
 
 ```bash
-python3 fetch_rest_history.py             # 90 days x all 27 coins, ~2 min
-python3 fetch_rest_history.py BTC ETH     # specific coins
+python3 fetch_rest_history.py                                   # 90 days, 1h, all coins
+python3 fetch_rest_history.py BTC ETH
+python3 fetch_rest_history.py --interval 5m
+python3 fetch_rest_history.py --interval 1h --start 2023-06-01
 ```
 
-Writes `data/funding/{coin}.parquet` and `data/marks/{coin}.parquet`. Idempotent.
+Writes `data/funding/`, `data/marks/` (1h), or `data/marks_{interval}/` for other intervals. Idempotent. Hyperliquid retention caps: 3y funding, 208d 1h marks, 17d 5m marks.
 
 ### Queries
 

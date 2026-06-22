@@ -1,18 +1,22 @@
 #!/usr/bin/env python3
-"""Fetch 90 days of hourly funding rates + 1h mark candles via Hyperliquid REST.
+"""Fetch Hyperliquid REST history: funding rates + mark candles.
 
 Writes Parquet to:
   data/funding/{coin}.parquet
-  data/marks/{coin}.parquet
+  data/marks/{coin}.parquet                 # 1h default
+  data/marks_{interval}/{coin}.parquet      # for any non-1h interval
 
 Idempotent (re-run overwrites).
 
-Run from this folder:
-  python3 fetch_rest_history.py            # fetch all 27 configured coins
-  python3 fetch_rest_history.py BTC ETH    # fetch specific coins only
+Examples:
+  python3 fetch_rest_history.py                                   # 90 days, 1h, all coins
+  python3 fetch_rest_history.py BTC ETH
+  python3 fetch_rest_history.py --interval 5m
+  python3 fetch_rest_history.py --interval 1h --start 2023-06-01
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 import time
@@ -26,15 +30,21 @@ from ws_capture import COINS  # 27 assets the daemon subscribes to
 
 BASE = Path(__file__).parent
 DATA_FUNDING = BASE / "data" / "funding"
-DATA_MARKS   = BASE / "data" / "marks"
 LOG_PATH     = BASE / "logs" / "fetch_rest_history.log"
 
 API_URL = "https://api.hyperliquid.xyz/info"
 NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000
-RATE_DELAY = 0.10  # seconds between paginated requests
+RATE_DELAY = 0.30  # seconds between paginated requests (Hyperliquid 429s under ~10 req/s sustained)
 
 SESSION = requests.Session()
 SESSION.headers["Content-Type"] = "application/json"
+
+
+def marks_dir(interval: str) -> Path:
+    """Output dir for mark candles. 1h goes to data/marks/ for backwards compat."""
+    if interval == "1h":
+        return BASE / "data" / "marks"
+    return BASE / "data" / f"marks_{interval}"
 
 
 def log(*a) -> None:
@@ -45,8 +55,8 @@ def log(*a) -> None:
 
 
 def post(payload: dict) -> object:
-    """POST to /info with retries."""
-    for attempt in range(5):
+    """POST to /info with exponential-backoff retries (handles Hyperliquid 429s)."""
+    for attempt in range(7):
         try:
             r = SESSION.post(API_URL, data=json.dumps(payload), timeout=30)
             if r.status_code == 200:
@@ -54,7 +64,7 @@ def post(payload: dict) -> object:
             log(f"  non-200 status={r.status_code} body={r.text[:200]}")
         except Exception as e:
             log(f"  request error attempt={attempt+1} err={e!r}")
-        time.sleep(1 + attempt)
+        time.sleep(min(60, 2 ** attempt))  # 1, 2, 4, 8, 16, 32, 60s
     return None
 
 
@@ -84,14 +94,14 @@ def fetch_funding(coin: str, start_ms: int, end_ms: int) -> pd.DataFrame:
     return df
 
 
-def fetch_marks_1h(coin: str, start_ms: int, end_ms: int) -> pd.DataFrame:
-    log(f"[marks]   {coin}")
+def fetch_marks(coin: str, start_ms: int, end_ms: int, interval: str) -> pd.DataFrame:
+    log(f"[marks {interval:>3}] {coin}")
     all_rows: list[dict] = []
     cursor_ms = start_ms
     while cursor_ms < end_ms:
         payload = {
             "type": "candleSnapshot",
-            "req": {"coin": coin, "interval": "1h",
+            "req": {"coin": coin, "interval": interval,
                     "startTime": cursor_ms, "endTime": end_ms},
         }
         data = post(payload)
@@ -117,19 +127,21 @@ def fetch_marks_1h(coin: str, start_ms: int, end_ms: int) -> pd.DataFrame:
     return df
 
 
-def main(coins: list[str]) -> None:
+def main(coins: list[str], interval: str, start_ms: int, end_ms: int) -> None:
     LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     DATA_FUNDING.mkdir(parents=True, exist_ok=True)
-    DATA_MARKS.mkdir(parents=True, exist_ok=True)
+    marks_out_dir = marks_dir(interval)
+    marks_out_dir.mkdir(parents=True, exist_ok=True)
 
-    now = datetime.now(timezone.utc)
-    end_ms = int(now.timestamp() * 1000)
-    start_ms = end_ms - NINETY_DAYS_MS
+    now = datetime.fromtimestamp(end_ms / 1000, tz=timezone.utc)
+    start_dt = datetime.fromtimestamp(start_ms / 1000, tz=timezone.utc)
+    window_days = (end_ms - start_ms) / (1000 * 60 * 60 * 24)
 
     started = time.time()
-    log(f"=== fetching funding + marks for {len(coins)} coins ===")
-    log(f"  window : 90 days ending {now.isoformat(timespec='seconds')}")
-    log(f"  coins  : {coins}")
+    log(f"=== fetching funding + {interval} marks for {len(coins)} coins ===")
+    log(f"  window  : {window_days:.0f} days, {start_dt.date()} to {now.date()}")
+    log(f"  output  : data/funding/ + {marks_out_dir.relative_to(BASE)}/")
+    log(f"  coins   : {coins}")
 
     ok: list[str] = []
     failed: list[str] = []
@@ -139,17 +151,17 @@ def main(coins: list[str]) -> None:
             if not df_f.empty:
                 out = DATA_FUNDING / f"{coin}.parquet"
                 df_f.to_parquet(out, index=False)
-                log(f"  [funding] {coin}: wrote {len(df_f)} rows -> {out.name}")
+                log(f"  [funding] {coin}: wrote {len(df_f)} rows -> {out.relative_to(BASE)}")
             else:
                 log(f"  [funding] {coin}: NO DATA")
 
-            df_m = fetch_marks_1h(coin, start_ms, end_ms)
+            df_m = fetch_marks(coin, start_ms, end_ms, interval)
             if not df_m.empty:
-                out = DATA_MARKS / f"{coin}.parquet"
+                out = marks_out_dir / f"{coin}.parquet"
                 df_m.to_parquet(out, index=False)
-                log(f"  [marks]   {coin}: wrote {len(df_m)} rows -> {out.name}")
+                log(f"  [marks  ] {coin}: wrote {len(df_m)} rows -> {out.relative_to(BASE)}")
             else:
-                log(f"  [marks]   {coin}: NO DATA")
+                log(f"  [marks  ] {coin}: NO DATA")
 
             if not df_f.empty and not df_m.empty:
                 ok.append(coin)
@@ -165,5 +177,20 @@ def main(coins: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    coins = sys.argv[1:] if len(sys.argv) > 1 else COINS
-    main(coins)
+    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser.add_argument("coins", nargs="*", help="coins to fetch (default: all 27)")
+    parser.add_argument("--interval", default="1h",
+                        help="candle interval: 1m, 5m, 15m, 1h, 4h, 1d (default: 1h)")
+    parser.add_argument("--start", default=None,
+                        help="start date YYYY-MM-DD (default: 90 days back)")
+    args = parser.parse_args()
+
+    end_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    if args.start:
+        start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        start_ms = int(start_dt.timestamp() * 1000)
+    else:
+        start_ms = end_ms - NINETY_DAYS_MS
+
+    coins = args.coins if args.coins else COINS
+    main(coins, args.interval, start_ms, end_ms)
