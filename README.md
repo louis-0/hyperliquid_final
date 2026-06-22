@@ -1,7 +1,76 @@
 # W10 Feature Prototype: Hyperliquid Data Layer
 
-This repository contains the W10 prototype code for the CM3070 Final Project: a Hyperliquid perpetual-futures basis-trade strategy with an XGBoost timing layer. The prototype is described in Chapter 4 of the preliminary report.
+Multi-asset WebSocket + REST capture for the CM3070 Final Project basis-trade strategy. Documented in Chapter 4 of the preliminary report.
 
-The scope of this prototype is the **data layer**: the multi-asset WebSocket capture daemon, the REST history fetcher, the strictly-causal DuckDB query layer, and a small reproducible data sample. The W11-W14 feature pipeline, signal layer, backtester, and evaluation are pre-registered design work covered in Chapter 3 of the prelim and are not in this repo's W10 scope.
+Scope: data layer only. The W11-W14 feature pipeline, signal layer, backtester, and evaluation are pre-registered design work in Chapter 3 and not in this repo.
 
-The prototype demonstrates feasibility of multi-asset Hyperliquid venue connectivity at scale: five parallel WebSocket connection groups within Hyperliquid's empirical operating range of approximately 21-24 subscriptions per connection, with hourly Parquet rotation and strict schema enforcement on disk. DuckDB-over-Parquet preserves a strictly causal feature pipeline so every feature at time t uses only data with venue_time at most t.
+Six WebSocket connection groups (4 streaming + 2 ctx, 108 subs total) inside Hyperliquid's ~21-24 sub-per-connection cap. Hourly Parquet rotation, schema-enforced on disk, queryable via DuckDB.
+
+## Setup
+
+Python 3.10+.
+
+```bash
+git clone https://github.com/louis-0/hyperliquid.git
+cd hyperliquid
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Run
+
+### Capture daemon
+
+```bash
+mkdir -p logs
+nohup python3 -u ws_capture.py > logs/ws_capture.log 2>&1 &
+```
+
+Writes `data/ws/{coin}/{channel}/{YYYY-MM-DD}/{HH}.parquet`, rotating hourly. Stop with `pkill -TERM -f ws_capture.py`.
+
+### REST history fetcher
+
+```bash
+python3 fetch_rest_history.py             # 90 days x all 27 coins, ~2 min
+python3 fetch_rest_history.py BTC ETH     # specific coins
+```
+
+Writes `data/funding/{coin}.parquet` and `data/marks/{coin}.parquet`. Idempotent.
+
+### Queries
+
+From `data_sample/` (or `data/`):
+
+```bash
+cd data_sample
+duckdb -c ".read ../queries/coverage_check.sql"
+python3 ../queries/arch_replication.py data_sample
+```
+
+`coverage_check.sql` reports row counts and time spans per (channel, coin).
+`arch_replication.py` is the 27/27 ARCH-effect replication from prelim Section 4.3. Returns 1/1 on the BTC sample.
+
+## Mapping to prelim Chapter 4
+
+| Section | Code |
+|---|---|
+| 4.1 What the prototype is | `ws_capture.py`, `fetch_rest_history.py` |
+| 4.2 Evaluation methodology | `queries/coverage_check.sql` |
+| 4.3 Findings (27/27 ARCH) | `queries/arch_replication.py` |
+| 4.4 Limitations | `ws_capture.py` `COIN_GROUPS` + `CTX_GROUPS` |
+
+## Layout
+
+```
+hyperliquid/
+├── ws_capture.py             WS daemon
+├── fetch_rest_history.py     REST snapshot fetcher
+├── requirements.txt
+├── queries/
+│   ├── coverage_check.sql
+│   └── arch_replication.py
+├── data_sample/              BTC 24h + 90d REST (see MANIFEST.md)
+├── data/                     gitignored
+└── logs/                     gitignored
+```
