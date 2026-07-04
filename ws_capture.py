@@ -33,12 +33,16 @@ WS_URL = "wss://api.hyperliquid.xyz/ws"
 COIN_GROUPS = [
     # Group 1: 5 chassis coins for W14 evaluation + 2 bonus crypto perps (ZEC, XMR) for W22 extension
     ["BTC", "ETH", "SOL", "NEAR", "HYPE", "ZEC", "XMR"],
-    # Group 2: xyz indices + commodities
-    ["xyz:SP500", "xyz:XYZ100", "xyz:BRENTOIL", "xyz:GOLD", "xyz:SILVER"],
-    # Group 3: xyz AI + semiconductors
+    # Group 2: xyz indices + commodities (7); WTIOIL rejected by HL
+    ["xyz:SP500", "xyz:XYZ100", "xyz:BRENTOIL", "xyz:GOLD", "xyz:SILVER",
+     "xyz:COPPER", "xyz:NATGAS"],
+    # Group 3: xyz AI + semiconductors (7)
     ["xyz:NVDA", "xyz:AMD", "xyz:MU", "xyz:MRVL", "xyz:SNDK", "xyz:INTC", "xyz:SPCX"],
-    # Group 4: xyz mega-cap tech + crypto-equity bridges
+    # Group 4: xyz mega-cap tech + crypto-equity bridges (8)
     ["xyz:GOOGL", "xyz:MSFT", "xyz:META", "xyz:AAPL", "xyz:TSLA", "xyz:ORCL", "xyz:MSTR", "xyz:CRCL"],
+    # Group 5: xyz new US equities + AI infra + memory index (8)
+    ["xyz:AMZN", "xyz:HOOD", "xyz:PLTR", "xyz:NBIS", "xyz:CRWV",
+     "xyz:CBRS", "xyz:BB", "xyz:DRAM"],
 ]
 COINS = [c for g in COIN_GROUPS for c in g]  # flat for buffer indexing
 STREAM_CHANNELS = ["l2Book", "trades", "bbo"]
@@ -51,10 +55,14 @@ CTX_GROUPS = [
     # Group 1: 7 crypto perps + 5 xyz indices/commodities
     ["BTC", "ETH", "SOL", "NEAR", "HYPE", "ZEC", "XMR",
      "xyz:SP500", "xyz:XYZ100", "xyz:BRENTOIL", "xyz:GOLD", "xyz:SILVER"],
-    # Group 2: xyz single-name stocks
+    # Group 2: xyz single-name stocks (existing)
     ["xyz:NVDA", "xyz:AMD", "xyz:MU", "xyz:MRVL", "xyz:SNDK", "xyz:INTC",
      "xyz:SPCX", "xyz:GOOGL", "xyz:MSFT", "xyz:META", "xyz:AAPL", "xyz:TSLA",
      "xyz:ORCL", "xyz:MSTR", "xyz:CRCL"],
+    # Group 3: xyz expansion (10 assets that HL accepts for ctx)
+    ["xyz:COPPER", "xyz:NATGAS",
+     "xyz:AMZN", "xyz:HOOD", "xyz:PLTR", "xyz:NBIS", "xyz:CRWV",
+     "xyz:CBRS", "xyz:BB", "xyz:DRAM"],
 ]
 CTX_CHANNELS = ["activeAssetCtx"]
 

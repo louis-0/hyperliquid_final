@@ -6,7 +6,7 @@ t and t-1, in-sample and out-of-sample. Both positive = ARCH effect
 survives (Engle 1982; Bollerslev 1986).
 
 The prelim Chapter 4 reports 27/27 sign-survival; this reproduces it
-from data/ or data_sample/.
+from data/ or data_sample/ over the W10 panel only.
 
 Run from the repo root:
   python3 queries/arch_replication.py              # walks data/ws/
@@ -23,6 +23,19 @@ import pandas as pd
 
 BAR_MIN    = 5    # 5-minute bars
 TRAIN_FRAC = 0.6  # in-sample portion
+
+# W10 panel per the prelim Chapter 4: 5 chassis + 2 bonus crypto + 20 xyz: TradFi.
+# Coins added later are not part of the W10 replication.
+W10_PANEL = [
+    # 5 chassis
+    "BTC", "ETH", "SOL", "NEAR", "HYPE",
+    # 2 bonus crypto
+    "ZEC", "XMR",
+    # 20 xyz: TradFi (WS connection groups 2-4)
+    "xyz:SP500", "xyz:XYZ100", "xyz:BRENTOIL", "xyz:GOLD", "xyz:SILVER",
+    "xyz:NVDA", "xyz:AMD", "xyz:MU", "xyz:MRVL", "xyz:SNDK", "xyz:INTC", "xyz:SPCX",
+    "xyz:GOOGL", "xyz:MSFT", "xyz:META", "xyz:AAPL", "xyz:TSLA", "xyz:ORCL", "xyz:MSTR", "xyz:CRCL",
+]
 
 
 def load_mid(data_root: Path, coin: str) -> pd.DataFrame:
@@ -57,14 +70,15 @@ def sign_survives(prices: pd.Series) -> tuple[bool, int, float, float]:
 
 def main(data_root: Path) -> None:
     ws_dir = data_root / "ws"
-    coins = sorted([d.name for d in ws_dir.iterdir() if d.is_dir()])
+    available = set(d.name for d in ws_dir.iterdir() if d.is_dir())
+    coins = [c for c in W10_PANEL if c in available]
     if not coins:
-        print(f"  no coins found under {ws_dir}")
+        print(f"  no W10-panel coins found under {ws_dir}")
         sys.exit(1)
 
     print(f"=== F1 vol-clustering replication ===")
     print(f"  data root : {data_root}")
-    print(f"  coins     : {len(coins)}")
+    print(f"  coins     : {len(coins)} of {len(W10_PANEL)} W10-panel")
     print(f"  bar width : {BAR_MIN} min")
     print(f"  train frac: {TRAIN_FRAC}")
     print()
