@@ -3,3 +3,6 @@ pandas>=2.0        # buffer + parquet writes
 pyarrow>=14.0      # parquet backend
 duckdb>=0.10       # queries
 requests>=2.31     # REST fetcher
+numpy>=1.26        # stats + arrays
+scipy>=1.11        # deflated Sharpe (normal CDF)
+pytest>=8.0        # test suite
