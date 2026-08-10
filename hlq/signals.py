@@ -1,4 +1,4 @@
-"""Strategy PnL engines for the long-spot / short-perp basis trade (He et al. 2024)."""
+"""PnL engines and regime labelling for the long-spot / short-perp basis trade (He et al. 2024)."""
 from __future__ import annotations
 
 import pandas as pd
@@ -33,3 +33,22 @@ def basis_drift_pnl(funding: pd.DataFrame, spot: pd.DataFrame, perp: pd.DataFram
     df["pnl"] = df["drift_pnl"] + df["funding_pnl"]
     df = df.dropna(subset=["pnl"]).reset_index(drop=True).rename(columns={"hour": "ts"})
     return df[["ts", "spot", "perp", "drift_pnl", "funding_pnl", "pnl"]]
+
+
+def regime_label(perp: pd.DataFrame, rolling_days: int = 30,
+                 bear: float = -0.10, bull: float = 0.10) -> pd.Series:
+    """Daily macro-regime label from a reference perp's rolling return.
+
+    Each UTC day is represented by its last mark; the `rolling_days` return of that daily
+    series labels the day 'bear' (return below `bear`), 'bull' (above `bull`), or 'calm'
+    otherwise. Days without `rolling_days` of prior history are 'calm'. Indexed by day, so a
+    per-day strategy series can be joined to it.
+    """
+    df = perp.sort_values("ts")
+    day = pd.to_datetime(df["ts"], utc=True).dt.floor("1D")
+    daily = pd.Series(df["close"].to_numpy(), index=pd.DatetimeIndex(day)).groupby(level=0).last()
+    roll_ret = daily.pct_change(periods=rolling_days, fill_method=None)
+    label = pd.Series("calm", index=daily.index, dtype="object", name="regime")
+    label[roll_ret < bear] = "bear"
+    label[roll_ret > bull] = "bull"
+    return label
