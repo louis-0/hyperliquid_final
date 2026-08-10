@@ -58,3 +58,35 @@ def test_basis_drift_aligns_on_the_hour():
     out = signals.basis_drift_pnl(funding, spot, perp)
     assert len(out) == 1
     assert out["pnl"].iloc[0] == pytest.approx((1.0 - 2.0) / 100.0 + 0.0003)
+
+
+def test_regime_label_classifies_bull_bear_calm():
+    # rolling_days=1: each day's label depends on the move since the prior day
+    hours = ["2026-06-01 12:00", "2026-06-02 12:00", "2026-06-03 12:00", "2026-06-04 12:00"]
+    perp = _frame(hours, close=[100.0, 112.0, 100.0, 105.0])
+    labels = signals.regime_label(perp, rolling_days=1)
+    #  d0: no prior -> calm | d1: +12% -> bull | d2: -10.7% -> bear | d3: +5% -> calm
+    assert labels.tolist() == ["calm", "bull", "bear", "calm"]
+
+
+def test_regime_label_threshold_direction():
+    # +9% stays calm (below the +10% line); larger moves cross into bull / bear
+    calm_up = _frame(["2026-06-01", "2026-06-02"], close=[100.0, 109.0])
+    bull = _frame(["2026-06-01", "2026-06-02"], close=[100.0, 120.0])
+    bear = _frame(["2026-06-01", "2026-06-02"], close=[100.0, 80.0])
+    assert signals.regime_label(calm_up, rolling_days=1).iloc[-1] == "calm"
+    assert signals.regime_label(bull, rolling_days=1).iloc[-1] == "bull"
+    assert signals.regime_label(bear, rolling_days=1).iloc[-1] == "bear"
+
+
+def test_regime_label_uses_last_mark_of_each_day():
+    # two ticks on the second day; the later close (112) sets that day's value
+    perp = _frame(["2026-06-01 12:00", "2026-06-02 09:00", "2026-06-02 20:00"],
+                  close=[100.0, 999.0, 112.0])
+    assert signals.regime_label(perp, rolling_days=1).tolist() == ["calm", "bull"]
+
+
+def test_regime_label_is_calm_until_enough_history():
+    # a rolling window longer than the data leaves the return undefined -> calm everywhere
+    perp = _frame(["2026-06-01", "2026-06-02", "2026-06-03"], close=[100.0, 50.0, 200.0])
+    assert (signals.regime_label(perp, rolling_days=5) == "calm").all()
