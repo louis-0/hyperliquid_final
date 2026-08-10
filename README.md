@@ -1,10 +1,8 @@
-# W10 Feature Prototype: Hyperliquid Data Layer
+# Hyperliquid Funding-Basis Strategy: CM3070 Final Project
 
-Multi-asset WebSocket + REST capture for the CM3070 Final Project basis-trade strategy. Documented in Chapter 4 of the preliminary report.
+Multi-asset market-data capture and cost-realistic analysis for a funding-basis (long-spot / short-perp) strategy on Hyperliquid perpetuals. Two parts: a continuous data-capture layer, and `hlq`, a unit-tested analysis package that turns the market data into backtests.
 
-Scope: data layer only. The W11-W14 feature pipeline, signal layer, backtester, and evaluation are pre-registered design work in Chapter 3 and not in this repo.
-
-Six WebSocket connection groups (4 streaming + 2 ctx, 108 subs total) inside Hyperliquid's ~21-24 sub-per-connection cap. Hourly Parquet rotation, schema-enforced on disk, queryable via DuckDB.
+Capture runs six WebSocket connection groups (4 streaming + 2 ctx, 108 subs total) inside Hyperliquid's ~21-24 sub-per-connection cap, with hourly Parquet rotation, schema-enforced on disk and queryable via DuckDB. REST fetchers backfill funding, mark, and spot candles.
 
 ## Setup
 
@@ -18,7 +16,32 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Run
+## The `hlq` analysis package
+
+Small, unit-tested modules:
+
+| Module | Provides |
+|---|---|
+| `hlq.data` | Parquet loaders (funding/marks/spot), hour alignment, a look-ahead guard |
+| `hlq.stats` | Annualised Sharpe, daily aggregation, moving-block bootstrap CI (Künsch 1989), Probabilistic/Deflated Sharpe (Bailey & López de Prado 2012/2014) |
+| `hlq.costs` | Taker/maker fee + slippage cost model, per-turnover round-trip |
+| `hlq.signals` | Funding-carry and basis-drift hourly PnL engines |
+| `hlq.portfolio` | Equal-weight basket over the coins' common window |
+
+Backtests are thin scripts over the package:
+
+```bash
+python scripts/run_chassis.py         # funding-carry chassis: per coin + equal-weight basket
+python scripts/run_basis_drift.py     # basis-drift-inclusive PnL: per coin + basket
+```
+
+Tests run off the committed `data_sample/`:
+
+```bash
+pytest -q
+```
+
+## Run (capture)
 
 ### Capture daemon
 
@@ -53,9 +76,9 @@ python3 queries/arch_replication.py data_sample
 ```
 
 `coverage_check.sql` reports row counts and time spans per (channel, coin).
-`arch_replication.py` is the 27/27 ARCH-effect replication from prelim Section 4.3. Returns 1/1 on the BTC sample.
+`arch_replication.py` is the 27/27 ARCH-effect replication from preliminary-report Section 4.3. Returns 1/1 on the BTC sample.
 
-## Mapping to prelim Chapter 4
+## Mapping to preliminary report Chapter 4
 
 | Section | Code |
 |---|---|
@@ -70,7 +93,11 @@ python3 queries/arch_replication.py data_sample
 hyperliquid/
 ├── ws_capture.py             WS daemon
 ├── fetch_rest_history.py     REST snapshot fetcher
+├── hlq/                      analysis package (data, stats, costs, signals, portfolio)
+├── scripts/                  runnable backtests (run_chassis, run_basis_drift)
+├── tests/                    pytest suite (run off data_sample/)
 ├── requirements.txt
+├── pytest.ini
 ├── queries/
 │   ├── coverage_check.sql
 │   └── arch_replication.py
