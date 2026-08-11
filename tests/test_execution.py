@@ -32,3 +32,19 @@ def test_vwap_is_cost_per_unit_not_notional_weighted():
 def test_insufficient_depth_returns_none():
     # only $101 of depth cannot fill a $10,000 order
     assert execution.walk_book(_asks((101.0, 1.0)), target_notional=10_000, mid=100.0) is None
+
+
+def test_parse_l2_snapshot_returns_mid_and_asks():
+    lj = '[[{"px": 99.0, "sz": 5.0}], [{"px": 101.0, "sz": 5.0}, {"px": 102.0, "sz": 3.0}]]'
+    mid, asks = execution.parse_l2_snapshot(99.0, 101.0, lj)
+    assert mid == pytest.approx(100.0)
+    assert asks == [{"px": 101.0, "sz": 5.0}, {"px": 102.0, "sz": 3.0}]
+
+
+def test_parse_l2_snapshot_none_on_malformed_json():
+    assert execution.parse_l2_snapshot(99.0, 101.0, "not json") is None
+
+
+def test_parse_l2_snapshot_none_when_ask_side_missing():
+    assert execution.parse_l2_snapshot(99.0, 101.0, '[[{"px": 99.0, "sz": 5.0}]]') is None  # bids only
+    assert execution.parse_l2_snapshot(99.0, 101.0, '[[], []]') is None                      # empty asks
