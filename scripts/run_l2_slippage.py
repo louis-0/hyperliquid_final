@@ -18,11 +18,12 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq when run as a script
 
-from hlq import data, execution
+from hlq import data, execution, results
 
 CHASSIS = ["BTC", "ETH", "SOL", "NEAR", "HYPE"]
 NOTIONALS = [1_000, 10_000, 100_000]
 SAMPLE_EVERY = 60   # roughly one snapshot per minute at the ~1 Hz capture rate
+RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
 
 def coin_slippage(coin: str, root=data.DATA_ROOT) -> dict:
@@ -58,16 +59,24 @@ def main(coins: list[str]) -> None:
     print(header)
     print("-" * 78)
 
+    table: dict[str, dict[str, float]] = {}
     for coin in coins:
         r = coin_slippage(coin)
         line = f"  {coin:<6} {r['n_files']:>6}"
         for n in NOTIONALS:
             arr = np.asarray(r["samples"][n], dtype=float)
             if arr.size:
+                table.setdefault(coin, {})[f"med_bps@{n // 1000}k"] = round(float(np.median(arr) * 1e4), 3)
                 line += f" {np.median(arr) * 1e4:>+10.2f} {np.percentile(arr, 95) * 1e4:>+10.2f}"
             else:
                 line += f" {'n/a':>10} {'n/a':>10}"
         print(line)
+
+    if table:
+        saved, h = results.record_run(RESULTS_ROOT, "l2_slippage",
+                                      {"coins": list(table), "notionals": NOTIONALS},
+                                      {"median_bps": table})
+        print(f"\n[results] {'recorded' if saved else 'already recorded'} {h}")
 
 
 if __name__ == "__main__":

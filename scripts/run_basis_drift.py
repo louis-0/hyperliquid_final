@@ -22,11 +22,12 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq when run as a script
 
-from hlq import data, portfolio, signals, stats
+from hlq import data, portfolio, results, signals, stats
 from hlq.costs import CostModel
 
 CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]      # have Hyperliquid spot; NEAR excluded (no spot)
 COST = CostModel()
+RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
 
 def coin_daily_gross(coin: str) -> pd.Series:
@@ -54,6 +55,7 @@ def main(coins: list[str]) -> None:
     print("-" * 88)
 
     series: dict[str, pd.Series] = {}
+    net: dict[str, float] = {}
     for coin in coins:
         try:
             series[coin] = coin_daily_gross(coin)
@@ -61,17 +63,24 @@ def main(coins: list[str]) -> None:
             print(f"  {coin:<6} (no spot/perp/funding)")
             continue
         r = summarise(series[coin])
+        net[coin] = round(r["sr_net"], 6)
         print(f"  {coin:<6} {r['n']:>6} {r['sr_gross']:>10.3f} {r['sr_net']:>9.3f} "
               f"{r['ann_ret']*100:>9.2f}% {r['ann_vol']*100:>9.2f}% "
               f"[{r['ci_lo']:>+5.2f}, {r['ci_hi']:>+5.2f}]")
 
     if series:
-        b = summarise(portfolio.equal_weight_basket(series))
+        basket = portfolio.equal_weight_basket(series)
+        b = summarise(basket)
         print("-" * 88)
         print(f"  {'basket':<6} {b['n']:>6} {'':>10} {b['sr_net']:>9.3f} "
               f"{b['ann_ret']*100:>9.2f}% {b['ann_vol']*100:>9.2f}% "
               f"[{b['ci_lo']:>+5.2f}, {b['ci_hi']:>+5.2f}]")
         print(f"  (equal-weight over the common window: {list(series)})")
+        span = f"{basket.index.min():%Y-%m-%d}/{basket.index.max():%Y-%m-%d}"
+        saved, h = results.record_run(RESULTS_ROOT, "basis_drift",
+                                      {"coins": list(series), "round_trip": COST.round_trip()},
+                                      {"net_sharpe": net, "basket_net_sharpe": round(b["sr_net"], 6)}, span)
+        print(f"  [results] {'recorded' if saved else 'already recorded'} {h}")
 
 
 if __name__ == "__main__":

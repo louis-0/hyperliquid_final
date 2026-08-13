@@ -5,6 +5,9 @@ data/
 logs/
 *.log
 
+# Recorded run outputs (ResultsStore)
+results/
+
 # Python
 __pycache__/
 *.py[cod]

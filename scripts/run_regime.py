@@ -18,13 +18,14 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq when run as a script
 
-from hlq import data, signals, stats
+from hlq import data, results, signals, stats
 from hlq.costs import CostModel
 
 CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]
 COST = CostModel()
 REGIMES = ["bear", "calm", "bull"]
 MIN_DAYS = 10
+RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
 
 def coin_daily_net(coin: str) -> pd.Series:
@@ -47,6 +48,7 @@ def main(coins: list[str]) -> None:
     print(f"\n{'coin':<6} {'regime':<6} {'n_days':>7} {'SR':>9} {'ann_ret%':>10} {'ann_vol%':>10}")
     print("-" * 74)
 
+    table: dict[str, dict[str, float]] = {}
     for coin in coins:
         try:
             daily = coin_daily_net(coin)
@@ -60,8 +62,16 @@ def main(coins: list[str]) -> None:
                 print(f"  {coin:<6} {r:<6} {len(sl):>7} {'n/a':>9} {'n/a':>10} {'n/a':>10}")
                 continue
             sr, ret, vol = stats.annualised_sharpe(sl)
+            table.setdefault(coin, {})[r] = round(sr, 6)
             print(f"  {coin:<6} {r:<6} {len(sl):>7} {sr:>9.3f} {ret*100:>9.2f}% {vol*100:>9.2f}%")
         print()
+
+    if table:
+        span = f"{regime.index.min():%Y-%m-%d}/{regime.index.max():%Y-%m-%d}"
+        saved, h = results.record_run(RESULTS_ROOT, "regime_basis_drift",
+                                      {"coins": list(table), "bear": -0.10, "bull": 0.10},
+                                      {"regime_sharpe": table}, span)
+        print(f"[results] {'recorded' if saved else 'already recorded'} {h}")
 
 
 if __name__ == "__main__":

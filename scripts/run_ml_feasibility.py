@@ -20,11 +20,12 @@ from sklearn.metrics import accuracy_score, mean_squared_error, roc_auc_score
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq when run as a script
 
-from hlq import baselines, data, explain, features
+from hlq import baselines, data, explain, features, results
 
 CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]
 TRAIN_FRAC = 0.70
 SEED = 42
+RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
 
 def feasibility(coin: str) -> dict:
@@ -68,6 +69,7 @@ def main(coins: list[str]) -> None:
     print(f"\n{'coin':<6} {'n_test':>7} {'naive_acc':>10} {'xgb_acc':>9} {'AUC':>7}"
           f" {'naive_RMSE':>12} {'xgb_RMSE':>12}  top SHAP drivers")
     print("-" * 84)
+    table: dict[str, dict] = {}
     for coin in coins:
         try:
             r = feasibility(coin)
@@ -77,8 +79,16 @@ def main(coins: list[str]) -> None:
         if not r["ok"]:
             print(f"  {coin:<6} (insufficient data)")
             continue
+        table[coin] = {"auc": round(r["auc"], 4), "xgb_acc": round(r["acc"], 4),
+                       "naive_acc": round(r["naive_acc"], 4), "top_drivers": r["drivers"]}
         print(f"  {r['coin']:<6} {r['n_test']:>7} {r['naive_acc']:>10.3f} {r['acc']:>9.3f}"
               f" {r['auc']:>7.3f} {r['naive_rmse']:>12.2e} {r['xgb_rmse']:>12.2e}  {', '.join(r['drivers'])}")
+
+    if table:
+        saved, h = results.record_run(RESULTS_ROOT, "ml_feasibility",
+                                      {"coins": list(table), "train_frac": TRAIN_FRAC, "seed": SEED},
+                                      {"per_coin": table})
+        print(f"\n[results] {'recorded' if saved else 'already recorded'} {h}")
 
     print("\nAUC is inflated by class imbalance; the SHAP drivers show how much of the call"
           "\nrests on the funding lags, i.e. the persistence a naive baseline already captures.")
