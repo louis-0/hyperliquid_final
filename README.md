@@ -25,17 +25,27 @@ Small, unit-tested modules:
 | `hlq.data` | Parquet loaders (funding/marks/spot), hour alignment, a look-ahead guard |
 | `hlq.stats` | Annualised Sharpe, daily aggregation, moving-block bootstrap CI (Künsch 1989), Probabilistic/Deflated Sharpe (Bailey & López de Prado 2012/2014) |
 | `hlq.costs` | Taker/maker fee + slippage cost model, per-turnover round-trip |
-| `hlq.signals` | Funding-carry and basis-drift hourly PnL engines |
+| `hlq.signals` | Funding-carry and basis-drift PnL engines, and the bear/bull/calm regime label |
 | `hlq.portfolio` | Equal-weight basket over the coins' common window |
+| `hlq.execution` | Volume-weighted fill price and slippage from an L2 order book |
+| `hlq.features` | Leakage-safe feature matrix for the next-hour funding model |
+| `hlq.explain` | SHAP attribution over the fitted model (Lundberg & Lee 2017) |
+| `hlq.baselines` | Naive prediction baselines (majority class, persistence) |
+| `hlq.results` | Run store keyed by a config hash, with no silent overwrite |
 
 Backtests are thin scripts over the package:
 
 ```bash
 python scripts/run_chassis.py         # funding-carry chassis: per coin + equal-weight basket
 python scripts/run_basis_drift.py     # basis-drift-inclusive PnL: per coin + basket
+python scripts/run_regime.py          # basis-drift Sharpe split by bear/bull/calm regime
+python scripts/run_l2_slippage.py     # realised slippage walked from the captured order books
+python scripts/run_ml_feasibility.py  # XGBoost vs naive baselines, with SHAP drivers
 ```
 
-Tests run off the committed `data_sample/`:
+Each run records its config and headline numbers under `results/` (gitignored), keyed by a config hash, so a run is reproducible and re-running is idempotent.
+
+Tests run off the committed `data_sample/`, so they need no real data:
 
 ```bash
 pytest -q
@@ -93,8 +103,8 @@ python3 queries/arch_replication.py data_sample
 hyperliquid/
 ├── ws_capture.py             WS daemon
 ├── fetch_rest_history.py     REST snapshot fetcher
-├── hlq/                      analysis package (data, stats, costs, signals, portfolio)
-├── scripts/                  runnable backtests (run_chassis, run_basis_drift)
+├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, results)
+├── scripts/                  runnable backtests (run_chassis/basis_drift/regime/l2_slippage/ml_feasibility)
 ├── tests/                    pytest suite (run off data_sample/)
 ├── requirements.txt
 ├── pytest.ini
@@ -103,5 +113,6 @@ hyperliquid/
 │   └── arch_replication.py
 ├── data_sample/              BTC 24h + 90d REST (see MANIFEST.md)
 ├── data/                     gitignored
+├── results/                  recorded run outputs, gitignored
 └── logs/                     gitignored
 ```
