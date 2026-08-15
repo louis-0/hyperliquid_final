@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cost-aware funding-carry advisor</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header>
+  <h1>Cost-aware funding-carry advisor</h1>
+  <p class="sub">Hyperliquid funding basis, long spot and short perp. The carry is a real risk
+  premium; the honest question is whether it survives your cost floor. Anchors: He et al. (2024),
+  BTC Sharpe {{ retail_anchor }} retail and {{ mm_anchor }} market-maker.</p>
+  <p class="regime">Current macro regime (30-day BTC return): <strong>{{ regime }}</strong></p>
+</header>
+
+<section class="calc">
+  <h2>Cost-floor calculator</h2>
+  <p class="hint">Enter your own fees and carrying costs. The default is the central retail-taker
+  scenario, which returns "do not deploy". Lower the fee tier or switch to maker to see it change.</p>
+  <form id="calc-form">
+    <label>Coin
+      <select name="coin">
+        {% for c in coins %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <label>Round-trip fee (bps)
+      <input type="number" name="fee_bps" value="11" step="0.5" min="0">
+    </label>
+    <label>Borrow (bps per day)
+      <input type="number" name="borrow_bps" value="1" step="0.5" min="0">
+    </label>
+    <label>Basis drift (bps per day)
+      <input type="number" name="drift_bps" value="1" step="0.5" min="0">
+    </label>
+  </form>
+  <div class="result">
+    <div class="verdict verdict-{{ default.verdict_class }}">{{ default.verdict }}</div>
+    <table>
+      <tr><td>Gross APR (before costs)</td><td id="gross_apr">{{ '%.2f' | format(default.gross_apr * 100) }}%</td></tr>
+      <tr><td>Net APR</td><td id="net_apr">{{ '%.2f' | format(default.net_apr * 100) }}%</td></tr>
+      <tr><td>Net Sharpe</td><td id="net_sharpe">{{ '%.2f' | format(default.net_sharpe) }}</td></tr>
+    </table>
+    <p class="series">series: <span id="series">{{ default.series }}</span></p>
+  </div>
+</section>
+
+<section class="panel">
+  <h2>Signal panel: the degradation ladder</h2>
+  <p class="hint">Per coin, the funding-only Sharpe falls as basis-drift variance and then
+  realistic costs are added. A real premium, consumed by the cost floor.</p>
+  <table>
+    <thead><tr><th>coin</th><th>funding APR</th><th>funding-only SR</th><th>basis-drift SR</th><th>realistic net SR</th></tr></thead>
+    <tbody>
+    {% for r in rows %}
+      <tr>
+        <td>{{ r.coin }}</td>
+        <td>{{ '%.2f' | format(r.funding_apr * 100) }}%</td>
+        <td>{{ '%.2f' | format(r.funding_only) }}</td>
+        <td>{% if r.basis_drift is not none %}{{ '%.2f' | format(r.basis_drift) }}{% else %}n/a{% endif %}</td>
+        <td>{% if r.realistic is not none %}{{ '%.2f' | format(r.realistic) }}{% else %}n/a{% endif %}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</section>
+
+<footer>
+  <p>Read-only advisory over the tested <code>hlq</code> package; no live orders. An aggregate
+  smart-money cohort monitor (net on-chain positioning, not individual wallets) is planned as a
+  further panel.</p>
+</footer>
+
+<script>
+const form = document.getElementById('calc-form');
+async function update() {
+  const params = new URLSearchParams(new FormData(form));
+  const resp = await fetch('/api/net?' + params.toString());
+  const m = await resp.json();
+  if (m.error) return;
+  document.getElementById('gross_apr').textContent = (m.gross_apr * 100).toFixed(2) + '%';
+  document.getElementById('net_apr').textContent = (m.net_apr * 100).toFixed(2) + '%';
+  document.getElementById('net_sharpe').textContent = m.net_sharpe.toFixed(2);
+  document.getElementById('series').textContent = m.series;
+  const v = document.querySelector('.verdict');
+  v.textContent = m.verdict;
+  v.className = 'verdict verdict-' + m.verdict.split(':')[0].replace(/ /g, '-');
+}
+form.addEventListener('input', update);
+</script>
+</body>
+</html>
