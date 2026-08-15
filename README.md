@@ -51,6 +51,16 @@ Tests run off the committed `data_sample/`, so they need no real data:
 pytest -q
 ```
 
+## The advisor dashboard
+
+A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario returns "do not deploy". A signal panel shows the per-coin degradation ladder (funding-only to basis-drift to realistic net Sharpe) and the current macro regime.
+
+```bash
+uvicorn app.main:app --reload      # then open http://127.0.0.1:8000
+```
+
+No live orders; it reads the local capture (point `HLQ_DATA_ROOT` elsewhere to override).
+
 ## Run (capture)
 
 ### Capture daemon
@@ -105,6 +115,7 @@ hyperliquid/
 ├── fetch_rest_history.py     REST snapshot fetcher
 ├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, results)
 ├── scripts/                  runnable backtests (run_chassis/basis_drift/regime/l2_slippage/ml_feasibility)
+├── app/                      advisor dashboard (FastAPI + Jinja2, read-only over hlq)
 ├── tests/                    pytest suite (run off data_sample/)
 ├── requirements.txt
 ├── pytest.ini
