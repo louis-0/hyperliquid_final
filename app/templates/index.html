@@ -12,7 +12,7 @@
   <p class="sub">Hyperliquid funding basis, long spot and short perp. The carry is a real risk
   premium; the honest question is whether it survives your cost floor. Anchors: He et al. (2024),
   BTC Sharpe {{ retail_anchor }} retail and {{ mm_anchor }} market-maker.</p>
-  <p class="regime">Current macro regime (30-day BTC return): <strong>{{ regime }}</strong></p>
+  <p class="regime">Macro regime as of {{ asof }} (30-day BTC return): <strong>{{ regime }}</strong></p>
 </header>
 
 <section class="calc">
@@ -36,6 +36,7 @@
     </label>
   </form>
   <div class="result">
+    {% if default %}
     <div class="verdict verdict-{{ default.verdict_class }}">{{ default.verdict }}</div>
     <table>
       <tr><td>Gross APR (before costs)</td><td id="gross_apr">{{ '%.2f' | format(default.gross_apr * 100) }}%</td></tr>
@@ -43,6 +44,9 @@
       <tr><td>Net Sharpe</td><td id="net_sharpe">{{ '%.2f' | format(default.net_sharpe) }}</td></tr>
     </table>
     <p class="series">series: <span id="series">{{ default.series }}</span></p>
+    {% else %}
+    <p class="hint">No data for the default coin at this data root.</p>
+    {% endif %}
   </div>
 </section>
 
@@ -66,10 +70,54 @@
   </table>
 </section>
 
+<section class="explain">
+  <h2>What drives the funding-timing model</h2>
+  <p class="hint">The next-hour funding-sign model (XGBoost) explained with SHAP (Lundberg and
+  Lee 2017): the features it leans on most, by mean absolute contribution over the test window.
+  Training runs on demand, so the first request for a coin takes a moment.</p>
+  <form id="explain-form">
+    <label>Coin
+      <select name="coin">
+        {% for c in coins %}<option value="{{ c }}">{{ c }}</option>{% endfor %}
+      </select>
+    </label>
+    <button type="submit">Explain</button>
+  </form>
+  <div id="drivers-out" class="hint">Choose a coin and select Explain.</div>
+</section>
+
+<section class="cohort">
+  <h2>Smart-money cohort net flow (aggregate)</h2>
+  {% if cohort %}
+  <p class="hint">Net directional lean of a frozen smart-money cohort
+  ({{ '{:,}'.format(cohort.provenance.n_smart_wallets) }} wallets, is_smart =
+  {{ cohort.provenance.is_smart_rule }}), applied to this project's captured trade flow over
+  {{ cohort.provenance.window_start }} to {{ cohort.provenance.window_end }}. Aggregate only:
+  net flow and share of turnover, never individual wallets.</p>
+  <table>
+    <thead><tr><th>coin</th><th>lean</th><th>net notional (USD)</th><th>cohort share of turnover</th><th>legs</th></tr></thead>
+    <tbody>
+    {% for coin, c in cohort.coins.items() %}
+      <tr>
+        <td>{{ coin }}</td>
+        <td>{{ c.lean }}</td>
+        <td>{{ '{:+,.0f}'.format(c.net_notional) }}</td>
+        <td>{{ '%.1f' | format(c.cohort_share * 100) }}%</td>
+        <td>{{ '{:,}'.format(c.n_legs) }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <p class="series">cohort sha {{ cohort.provenance.cohort_sha256_16 }}, frozen snapshot, not live.</p>
+  {% else %}
+  <p class="hint">Snapshot not built. Run scripts/build_cohort_snapshot.py with the frozen cohort
+  labels to populate this panel.</p>
+  {% endif %}
+</section>
+
 <footer>
-  <p>Read-only advisory over the tested <code>hlq</code> package; no live orders. An aggregate
-  smart-money cohort monitor (net on-chain positioning, not individual wallets) is planned as a
-  further panel.</p>
+  <p>Read-only advisory over the tested <code>hlq</code> package; no live orders. The smart-money
+  cohort panel is a frozen aggregate snapshot: net directional trade flow, never individual wallets.</p>
 </footer>
 
 <script>
@@ -88,6 +136,26 @@ async function update() {
   v.className = 'verdict verdict-' + m.verdict.split(':')[0].replace(/ /g, '-');
 }
 form.addEventListener('input', update);
+
+const explainForm = document.getElementById('explain-form');
+const driversOut = document.getElementById('drivers-out');
+explainForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const coin = new FormData(explainForm).get('coin');
+  driversOut.textContent = 'training the funding-sign model for ' + coin + '...';
+  const m = await (await fetch('/api/drivers?coin=' + coin)).json();
+  if (m.error) { driversOut.textContent = m.error; return; }
+  const auc = m.auc == null ? 'n/a' : m.auc.toFixed(3);
+  const rows = m.drivers.map(d =>
+    '<tr><td>' + d.feature + '</td><td>' + d.mean_abs_shap.toFixed(4) + '</td></tr>').join('');
+  driversOut.innerHTML =
+    '<p class="series">test AUC ' + auc + ', model accuracy ' + m.acc.toFixed(3) +
+    ' vs majority-class ' + m.naive_acc.toFixed(3) + ' over ' + m.n_test + ' hours</p>' +
+    '<table><thead><tr><th>feature</th><th>mean |SHAP|</th></tr></thead><tbody>' + rows +
+    '</tbody></table>' +
+    '<p class="hint">In feasibility tests, much of the skill rested on the funding lags a ' +
+    'naive persistence baseline already captures.</p>';
+});
 </script>
 </body>
 </html>
