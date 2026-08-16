@@ -32,3 +32,12 @@ def test_sign_drivers_finds_the_driving_feature_and_beats_chance():
     assert r["drivers"][0][0] == "basis"                  # basis drives the label, so it ranks first
     assert r["auc"] > 0.6                                  # real out-of-sample skill, not chance
     assert r["n_test"] == 120                             # 30% of 400 rows
+
+
+def test_compare_classifiers_all_beat_the_majority_baseline():
+    r = timing.compare_classifiers(_learnable_frame())
+    assert set(r["models"]) == {"xgboost", "random_forest", "logistic"}
+    for name, s in r["models"].items():
+        assert s["auc"] > 0.6, f"{name} did not learn the driving feature"   # basis drives the label
+    assert r["n_test"] == 120
+    assert 0.0 <= r["majority_acc"] <= 1.0
