@@ -16,15 +16,13 @@ from pathlib import Path
 
 import numpy as np
 import xgboost as xgb
-from sklearn.metrics import accuracy_score, mean_squared_error, roc_auc_score
+from sklearn.metrics import mean_squared_error
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq when run as a script
 
-from hlq import baselines, data, explain, features, results
+from hlq import baselines, data, features, results, timing
 
 CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]
-TRAIN_FRAC = 0.70
-SEED = 42
 RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
 
@@ -32,33 +30,21 @@ def feasibility(coin: str) -> dict:
     df = features.build_features(data.load_funding(coin), data.load_spot(coin), data.load_marks(coin))
     if len(df) < 200:
         return {"coin": coin, "ok": False}
-    split = int(len(df) * TRAIN_FRAC)
+    split = int(len(df) * timing.TRAIN_FRAC)
     train, test = df.iloc[:split], df.iloc[split:]
-    x_train, x_test = train[features.FEATURES], test[features.FEATURES]
-    sign_train, sign_test = train["target_fund_sign"], test["target_fund_sign"]
     mag_test = test["target_fund"].to_numpy()
 
-    naive_acc = baselines.majority_class_accuracy(sign_train, sign_test)
+    sign = timing.sign_drivers(df, k=3)                    # classifier, SHAP drivers, AUC vs naive
     naive_rmse = baselines.persistence_rmse(mag_test, test["funding_lag_1"].to_numpy())
 
-    clf = xgb.XGBClassifier(n_estimators=200, max_depth=4, learning_rate=0.05,
-                            eval_metric="logloss", random_state=SEED, n_jobs=2, tree_method="hist")
-    clf.fit(x_train, sign_train)
-    proba = clf.predict_proba(x_test)[:, 1]
-    auc = float(roc_auc_score(sign_test, proba)) if sign_test.nunique() > 1 else float("nan")
-    acc = float(accuracy_score(sign_test, (proba > 0.5).astype(int)))
-
     reg = xgb.XGBRegressor(n_estimators=200, max_depth=4, learning_rate=0.05,
-                           random_state=SEED, n_jobs=2, tree_method="hist")
-    reg.fit(x_train, train["target_fund"])
-    xgb_rmse = float(np.sqrt(mean_squared_error(mag_test, reg.predict(x_test))))
+                           random_state=timing.SEED, n_jobs=2, tree_method="hist")
+    reg.fit(train[features.FEATURES], train["target_fund"])
+    xgb_rmse = float(np.sqrt(mean_squared_error(mag_test, reg.predict(test[features.FEATURES]))))
 
-    shap_values, _ = explain.explain(clf, x_test)
-    drivers = shap_values.abs().mean().sort_values(ascending=False).head(3)
-
-    return {"coin": coin, "ok": True, "n_test": len(test), "naive_acc": naive_acc, "acc": acc,
-            "auc": auc, "naive_rmse": naive_rmse, "xgb_rmse": xgb_rmse,
-            "drivers": list(drivers.index)}
+    return {"coin": coin, "ok": True, "n_test": sign["n_test"], "naive_acc": sign["naive_acc"],
+            "acc": sign["acc"], "auc": sign["auc"], "naive_rmse": naive_rmse, "xgb_rmse": xgb_rmse,
+            "drivers": [name for name, _ in sign["drivers"]]}
 
 
 def main(coins: list[str]) -> None:
@@ -86,8 +72,8 @@ def main(coins: list[str]) -> None:
 
     if table:
         saved, h = results.record_run(RESULTS_ROOT, "ml_feasibility",
-                                      {"coins": list(table), "train_frac": TRAIN_FRAC, "seed": SEED},
-                                      {"per_coin": table})
+                                      {"coins": list(table), "train_frac": timing.TRAIN_FRAC,
+                                       "seed": timing.SEED}, {"per_coin": table})
         print(f"\n[results] {'recorded' if saved else 'already recorded'} {h}")
 
     print("\nAUC is inflated by class imbalance; the SHAP drivers show how much of the call"
