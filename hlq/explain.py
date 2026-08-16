@@ -25,3 +25,11 @@ def top_drivers(shap_row: pd.Series, k: int = 3) -> list[tuple[str, float]]:
     as (feature, value) pairs ordered strongest first."""
     ranked = shap_row.reindex(shap_row.abs().sort_values(ascending=False).index)
     return list(ranked.head(k).items())
+
+
+def mean_abs_drivers(shap_frame: pd.DataFrame, k: int = 3) -> list[tuple[str, float]]:
+    """The k features with the largest mean absolute SHAP contribution across all rows, as
+    (feature, mean_abs) pairs ordered strongest first. This is the global-importance view: the
+    average over rows of the per-prediction attributions top_drivers reads off a single row."""
+    ranked = shap_frame.abs().mean().sort_values(ascending=False)
+    return list(ranked.head(k).items())
