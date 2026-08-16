@@ -38,3 +38,12 @@ def test_top_drivers_ranks_by_absolute_contribution():
     # |-0.9| > |0.5| > |-0.2| > |0.1|  ->  the two strongest drivers are b then a
     row = pd.Series({"a": 0.5, "b": -0.9, "c": 0.1, "d": -0.2})
     assert [name for name, _ in explain.top_drivers(row, k=2)] == ["b", "a"]
+
+
+def test_mean_abs_drivers_ranks_by_global_importance():
+    # b has the largest mean magnitude (0.9), then a (0.4); signs cancel but magnitudes do not
+    frame = pd.DataFrame({"a": [0.5, -0.4, 0.3], "b": [-0.9, 0.9, -0.9],
+                          "c": [0.0, 0.1, -0.1], "d": [0.05, -0.02, 0.0]})
+    ranked = explain.mean_abs_drivers(frame, k=2)
+    assert [name for name, _ in ranked] == ["b", "a"]
+    assert ranked[0][1] == pytest.approx(0.9)              # the reported score is mean |SHAP|
