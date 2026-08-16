@@ -1,0 +1,58 @@
+{
+  "provenance": {
+    "cohort_sha256_16": "ed4b15081ac50514",
+    "n_smart_wallets": 4925,
+    "n_cohort_wallets": 130880,
+    "is_smart_rule": ">=100 trades and realised PnL >= 80th percentile of active wallets",
+    "window_start": "2026-06-03",
+    "window_end": "2026-08-15",
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ]
+  },
+  "coins": {
+    "BTC": {
+      "net_notional": 31855650.477847815,
+      "cohort_notional": 128438951855.892,
+      "n_legs": 14797514,
+      "total_notional": 303249765350.829,
+      "cohort_share": 0.42354180128482954,
+      "lean": "net long",
+      "window_start": "2026-06-03",
+      "window_end": "2026-08-15"
+    },
+    "ETH": {
+      "net_notional": 33573293.35633528,
+      "cohort_notional": 41310018091.04121,
+      "n_legs": 7959060,
+      "total_notional": 118550235236.52177,
+      "cohort_share": 0.3484600263223672,
+      "lean": "net long",
+      "window_start": "2026-06-03",
+      "window_end": "2026-08-15"
+    },
+    "SOL": {
+      "net_notional": 5542042.581186697,
+      "cohort_notional": 11707355154.330084,
+      "n_legs": 4844226,
+      "total_notional": 30518932783.06944,
+      "cohort_share": 0.38360958548409035,
+      "lean": "net long",
+      "window_start": "2026-06-03",
+      "window_end": "2026-08-15"
+    },
+    "HYPE": {
+      "net_notional": 55988981.46870941,
+      "cohort_notional": 28632653158.205917,
+      "n_legs": 19233683,
+      "total_notional": 66361559500.715546,
+      "cohort_share": 0.4314644407640418,
+      "lean": "net long",
+      "window_start": "2026-06-03",
+      "window_end": "2026-08-15"
+    }
+  }
+}
