@@ -31,6 +31,7 @@ Small, unit-tested modules:
 | `hlq.features` | Leakage-safe feature matrix for the next-hour funding model |
 | `hlq.explain` | SHAP attribution over the fitted model (Lundberg & Lee 2017) |
 | `hlq.baselines` | Naive prediction baselines (majority class, persistence) |
+| `hlq.timing` | Next-hour funding-sign model (XGBoost) and its SHAP drivers, shared by the ML backtest and the dashboard |
 | `hlq.results` | Run store keyed by a config hash, with no silent overwrite |
 
 Backtests are thin scripts over the package:
@@ -53,13 +54,19 @@ pytest -q
 
 ## The advisor dashboard
 
-A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario returns "do not deploy". A signal panel shows the per-coin degradation ladder (funding-only to basis-drift to realistic net Sharpe) and the current macro regime.
+A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario returns "do not deploy". A signal panel shows the per-coin degradation ladder (funding-only to basis-drift to realistic net Sharpe) and the macro regime as of the data's last timestamp. An explainability panel trains the funding-sign model on demand and reports its top SHAP drivers, and a smart-money cohort panel shows a frozen cohort's aggregate net directional flow and share of turnover per coin, never individual wallets.
 
 ```bash
 uvicorn app.main:app --reload      # then open http://127.0.0.1:8000
 ```
 
-No live orders; it reads the local capture (point `HLQ_DATA_ROOT` elsewhere to override).
+No live orders; it reads the local capture (point `HLQ_DATA_ROOT` elsewhere to override). The cohort panel reads `app/cohort_snapshot.json`, a small aggregate built once from the captured trades and a frozen cohort label set:
+
+```bash
+python scripts/build_cohort_snapshot.py /path/to/wallet_labels.parquet
+```
+
+Only the collapsed per-coin aggregate (net flow, share of turnover, leg count) is written; no wallet address enters the repo.
 
 ## Run (capture)
 
@@ -113,9 +120,9 @@ python3 queries/arch_replication.py data_sample
 hyperliquid/
 ├── ws_capture.py             WS daemon
 ├── fetch_rest_history.py     REST snapshot fetcher
-├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, results)
-├── scripts/                  runnable backtests (run_chassis/basis_drift/regime/l2_slippage/ml_feasibility)
-├── app/                      advisor dashboard (FastAPI + Jinja2, read-only over hlq)
+├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, timing, results)
+├── scripts/                  runnable backtests (run_chassis/basis_drift/regime/l2_slippage/ml_feasibility) + build_cohort_snapshot
+├── app/                      advisor dashboard (FastAPI + Jinja2, read-only over hlq; cohort_snapshot.json)
 ├── tests/                    pytest suite (run off data_sample/)
 ├── requirements.txt
 ├── pytest.ini
