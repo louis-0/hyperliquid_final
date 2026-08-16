@@ -41,3 +41,9 @@ def test_compare_classifiers_all_beat_the_majority_baseline():
         assert s["auc"] > 0.6, f"{name} did not learn the driving feature"   # basis drives the label
     assert r["n_test"] == 120
     assert 0.0 <= r["majority_acc"] <= 1.0
+
+
+def test_driver_stability_is_robust_on_the_learnable_frame():
+    r = timing.driver_stability(_learnable_frame(), seeds=(0, 1, 2))
+    assert r["lead_driver"] == "basis"                    # basis drives the label across seeds
+    assert r["lead_share"] == 1.0                         # top driver identical on every refit
