@@ -5,6 +5,8 @@ time-ordered split, and hyper-parameters) lives in one place rather than being r
 """
 from __future__ import annotations
 
+from collections import Counter
+
 import pandas as pd
 import xgboost as xgb
 from sklearn.ensemble import RandomForestClassifier
@@ -88,3 +90,17 @@ def compare_classifiers(df: pd.DataFrame, train_frac: float = TRAIN_FRAC, seed: 
         "majority_acc": baselines.majority_class_accuracy(y_train, y_test),
         "n_test": int(len(test)),
     }
+
+
+def driver_stability(df: pd.DataFrame, seeds=(0, 1, 2, 3, 4), k: int = 3) -> dict:
+    """Stability of the SHAP driver ranking under model randomness: refit the sign model with
+    several seeds, take the top driver each time, and report the most common leader with the share
+    of refits it leads. A stable leader means the interpretation is robust, not a one-seed artefact.
+    """
+    tops = []
+    for s in seeds:
+        clf, _, test = train_sign_model(df, seed=s)
+        shap_frame, _ = explain.explain(clf, test[features.FEATURES])
+        tops.append(explain.mean_abs_drivers(shap_frame, k)[0][0])
+    lead, count = Counter(tops).most_common(1)[0]
+    return {"top_per_seed": tops, "lead_driver": lead, "lead_share": count / len(seeds)}
