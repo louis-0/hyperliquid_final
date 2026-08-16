@@ -118,11 +118,15 @@ def _drivers(coin: str, root: Path, k: int = 5):
             _DRIVERS_CACHE[key] = None
             return None
         r = timing.sign_drivers(df, k=k)
+        fam = timing.compare_classifiers(df)["models"]
+        families = {name: {"auc": None if math.isnan(s["auc"]) else round(s["auc"], 3),
+                           "acc": round(s["acc"], 3)} for name, s in fam.items()}
         _DRIVERS_CACHE[key] = {
             "coin": coin,
             "drivers": [{"feature": f, "mean_abs_shap": v} for f, v in r["drivers"]],
             "auc": None if math.isnan(r["auc"]) else r["auc"],
             "acc": r["acc"], "naive_acc": r["naive_acc"], "n_test": r["n_test"],
+            "families": families,
         }
     return _DRIVERS_CACHE[key]
 

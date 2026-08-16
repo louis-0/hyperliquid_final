@@ -148,11 +148,17 @@ explainForm.addEventListener('submit', async (e) => {
   const auc = m.auc == null ? 'n/a' : m.auc.toFixed(3);
   const rows = m.drivers.map(d =>
     '<tr><td>' + d.feature + '</td><td>' + d.mean_abs_shap.toFixed(4) + '</td></tr>').join('');
+  const f = m.families || {};
+  const famLine = (f.xgboost && f.random_forest && f.logistic)
+    ? '<p class="series">same split, AUC by family: XGBoost ' + f.xgboost.auc +
+      ', random forest ' + f.random_forest.auc + ', logistic ' + f.logistic.auc +
+      ' (no family advantage)</p>'
+    : '';
   driversOut.innerHTML =
     '<p class="series">test AUC ' + auc + ', model accuracy ' + m.acc.toFixed(3) +
     ' vs majority-class ' + m.naive_acc.toFixed(3) + ' over ' + m.n_test + ' hours</p>' +
     '<table><thead><tr><th>feature</th><th>mean |SHAP|</th></tr></thead><tbody>' + rows +
-    '</tbody></table>' +
+    '</tbody></table>' + famLine +
     '<p class="hint">In feasibility tests, much of the skill rested on the funding lags a ' +
     'naive persistence baseline already captures.</p>';
 });
