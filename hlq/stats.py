@@ -20,6 +20,19 @@ def annualised_sharpe(daily: pd.Series) -> tuple[float, float, float]:
     return float(sharpe), float(mu), float(sigma)
 
 
+def psr_inputs(daily: pd.Series) -> tuple[float, int, float, float]:
+    """Per-observation (Sharpe, T, skew, non-excess kurtosis) for psr/deflated_sharpe, from a return series."""
+    d = pd.Series(daily).dropna()
+    T = len(d)
+    sd = d.std()                                    # ddof=1
+    if not sd > 0:                                  # flat (or degenerate) series: no dispersion
+        return 0.0, T, 0.0, 3.0
+    sr = float(d.mean() / sd)
+    skew = float(d.skew()) if T > 2 else 0.0
+    kurt = float(d.kurt() + 3.0) if T > 3 else 3.0  # pandas kurt is excess; psr wants non-excess
+    return sr, T, skew, kurt
+
+
 def to_daily(returns: pd.Series) -> pd.Series:
     """Sum a datetime-indexed return series into daily UTC buckets."""
     idx = pd.DatetimeIndex(returns.index)

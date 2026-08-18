@@ -21,6 +21,28 @@ def test_annualised_sharpe_flat_series_is_zero():
     assert ann_vol == 0.0
 
 
+def test_psr_inputs_perobservation_sharpe_matches_annualised():
+    # psr_inputs returns the per-observation Sharpe; scaling by sqrt(365) recovers the annualised one
+    d = pd.Series(np.random.default_rng(0).normal(0.001, 0.01, 4000))
+    sr, T, _, _ = stats.psr_inputs(d)
+    ann_sr, _, _ = stats.annualised_sharpe(d)
+    assert T == 4000
+    assert sr * np.sqrt(stats.TRADING_DAYS) == pytest.approx(ann_sr, rel=1e-9)
+
+
+def test_psr_inputs_returns_nonexcess_kurtosis():
+    # pandas .kurt() is excess (0 for a normal); psr_inputs must return the non-excess ~3 psr expects
+    d = pd.Series(np.random.default_rng(1).normal(0.0, 1.0, 30000))
+    _, _, skew, kurt = stats.psr_inputs(d)
+    assert skew == pytest.approx(0.0, abs=0.1)
+    assert kurt == pytest.approx(3.0, abs=0.2)
+
+
+def test_psr_inputs_flat_series_is_safe():
+    sr, T, skew, kurt = stats.psr_inputs(pd.Series([0.004, 0.004, 0.004, 0.004]))
+    assert sr == 0.0 and T == 4 and kurt == pytest.approx(3.0, abs=1e-9)
+
+
 def test_to_daily_sums_within_utc_day():
     idx = pd.date_range("2026-06-01", periods=48, freq="h", tz="UTC")
     daily = stats.to_daily(pd.Series(0.0001, index=idx))
