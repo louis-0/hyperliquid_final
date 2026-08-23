@@ -37,7 +37,7 @@ def to_daily(returns: pd.Series) -> pd.Series:
     """Sum a datetime-indexed return series into daily UTC buckets."""
     idx = pd.DatetimeIndex(returns.index)
     idx = idx.tz_localize("UTC") if idx.tz is None else idx.tz_convert("UTC")
-    return pd.Series(returns.to_numpy(), index=idx).resample("1D").sum().dropna()
+    return pd.Series(returns.to_numpy(), index=idx).resample("1D").sum(min_count=1).dropna()
 
 
 def block_bootstrap_ci(daily: pd.Series, n_resamples: int = 1000, block: int = 10,
@@ -50,7 +50,7 @@ def block_bootstrap_ci(daily: pd.Series, n_resamples: int = 1000, block: int = 1
     lo_q, hi_q = (1 - ci) / 2 * 100, (1 + ci) / 2 * 100
     sharpes = []
     for _ in range(n_resamples):
-        n_blocks = max(1, n // block)
+        n_blocks = max(1, -(-n // block))          # ceiling, so the truncated sample keeps length n
         starts = rng.integers(0, max(1, n - block + 1), size=n_blocks)
         sample = np.concatenate([arr[s:s + block] for s in starts])[:n]
         mu = sample.mean() * TRADING_DAYS
