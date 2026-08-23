@@ -2,7 +2,7 @@
 
 Multi-asset market-data capture and cost-realistic analysis for a funding-basis (long-spot / short-perp) strategy on Hyperliquid perpetuals. Two parts: a continuous data-capture layer, and `hlq`, a unit-tested analysis package that turns the market data into backtests.
 
-Capture runs six WebSocket connection groups (4 streaming + 2 ctx, 108 subs total) inside Hyperliquid's ~21-24 sub-per-connection cap, with hourly Parquet rotation, schema-enforced on disk and queryable via DuckDB. REST fetchers backfill funding, mark, and spot candles.
+Capture runs eight WebSocket connection groups (5 streaming + 3 ctx, 148 subs total) inside Hyperliquid's ~21-24 sub-per-connection cap, with hourly Parquet rotation, schema-enforced on disk and queryable via DuckDB. REST fetchers backfill funding, mark, and spot candles.
 
 ## Setup
 
@@ -83,12 +83,23 @@ Writes `data/ws/{coin}/{channel}/{YYYY-MM-DD}/{HH}.parquet`, rotating hourly. St
 
 ```bash
 python3 fetch_rest_history.py                                   # 90 days, 1h, all coins
-python3 fetch_rest_history.py BTC ETH
-python3 fetch_rest_history.py --interval 5m
-python3 fetch_rest_history.py --interval 1h --start 2023-06-01
+python3 fetch_rest_history.py --start 2023-12-01 --end 2026-08-23   # pinned window
+python3 fetch_spot_history.py --start 2024-01-01 --end 2026-08-23   # spot pairs, @index ids
 ```
 
-Writes `data/funding/`, `data/marks/` (1h), or `data/marks_{interval}/` for other intervals. Idempotent. Hyperliquid retention caps: 3y funding, 208d 1h marks, 17d 5m marks.
+Writes `data/funding/`, `data/marks/` (1h), `data/spot/`, or `data/marks_{interval}/` for other intervals. Idempotent; `--end` pins a reproducible window.
+
+### Data snapshot
+
+The recorded results under `results/` were computed on a snapshot pinned at 2026-08-23 (last complete day 2026-08-22), re-fetchable with the pinned commands above:
+
+| Layer | Window | Bound by |
+|---|---|---|
+| `data/funding/` | 2023-12-01 to 2026-08-22 (996 d, hourly) | window start; the venue serves coarser 8-hourly rows before roughly December 2023 |
+| `data/marks/`, `data/spot/` | 2026-01-27 to 2026-08-23 (209 d, 207 complete) | venue retention of roughly 5,000 candles per series, a rolling cap |
+| `data/ws/` | live since 2026-06-03 | not re-fetchable: the venue exposes no historical per-wallet tape, so this layer only grows forward |
+
+Later-listed coins carry shorter funding series inside the same window (HYPE 626 d, ZEC 325 d, XMR 220 d). Funding-only rungs use the full funding window; basis-drift, realistic, and feature-based runs inherit the spot/marks intersection; tape-based analyses state their own as-of date.
 
 ### Queries
 
@@ -119,7 +130,8 @@ python3 queries/arch_replication.py data_sample
 ```
 hyperliquid/
 ├── ws_capture.py             WS daemon
-├── fetch_rest_history.py     REST snapshot fetcher
+├── fetch_rest_history.py     REST funding + mark-candle fetcher
+├── fetch_spot_history.py     REST spot-candle fetcher (@index pairs)
 ├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, timing, results)
 ├── scripts/                  runnable backtests (run_chassis/basis_drift/regime/l2_slippage/ml_feasibility) + build_cohort_snapshot
 ├── app/                      advisor dashboard (FastAPI + Jinja2, read-only over hlq; cohort_snapshot.json)
