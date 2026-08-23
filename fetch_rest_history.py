@@ -12,7 +12,8 @@ Examples:
   python3 fetch_rest_history.py                                   # 90 days, 1h, all coins
   python3 fetch_rest_history.py BTC ETH
   python3 fetch_rest_history.py --interval 5m
-  python3 fetch_rest_history.py --interval 1h --start 2023-06-01
+  python3 fetch_rest_history.py --interval 1h --start 2023-12-01
+  python3 fetch_rest_history.py --start 2023-12-01 --end 2026-08-23   # pinned window
 """
 from __future__ import annotations
 
@@ -183,9 +184,15 @@ if __name__ == "__main__":
                         help="candle interval: 1m, 5m, 15m, 1h, 4h, 1d (default: 1h)")
     parser.add_argument("--start", default=None,
                         help="start date YYYY-MM-DD (default: 90 days back)")
+    parser.add_argument("--end", default=None,
+                        help="end date YYYY-MM-DD (default: now); set for a reproducible pinned window")
     args = parser.parse_args()
 
-    end_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
+    if args.end:
+        end_dt = datetime.strptime(args.end, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+        end_ms = int(end_dt.timestamp() * 1000)
+    else:
+        end_ms = int(datetime.now(timezone.utc).timestamp() * 1000)
     if args.start:
         start_dt = datetime.strptime(args.start, "%Y-%m-%d").replace(tzinfo=timezone.utc)
         start_ms = int(start_dt.timestamp() * 1000)
