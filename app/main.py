@@ -24,7 +24,7 @@ from hlq.costs import CostModel
 BASE = Path(__file__).resolve().parent
 COHORT_SNAPSHOT = BASE / "cohort_snapshot.json"
 COST = CostModel()
-CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]
+CHASSIS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"]
 R11_BORROW_BPS_DAY = 1.0                 # central realistic borrow drag (Chapter 5, R11)
 R11_DRIFT_BPS_DAY = 1.0                  # central realistic basis-drift drag
 
