@@ -6,8 +6,9 @@ window, each netted by one amortised round-trip cost: buy-and-hold BTC (spot clo
 an equal-weight buy-and-hold basket (equal notional in spot BTC, ETH, SOL, and HYPE,
 rebalanced daily), and the naive funding-carry chassis without timing. The HLP vault
 baseline is not computed; its net-asset-value history is not captured. Every row is
-deflated at the trial count and cross-trial variance of the rung x coin and rung x
-basket search set, so the comparison and the ablation share one benchmark.
+deflated twice: at the trial count and cross-trial variance of the four rungs (funding-only,
+basis-drift, realistic, realistic-B) over every coin and basket on this window, the
+ablation's search set, and at those of the hedged rungs alone.
 
     python scripts/run_baselines.py
 """
@@ -26,8 +27,8 @@ from hlq.costs import CostModel
 
 SPOT_COINS = ["BTC", "ETH", "SOL", "HYPE"]
 DROP = "SOL"
-CENTRAL_DRIFT_BPS_DAY = 1.0
-CENTRAL_BORROW_BPS_DAY = 1.0
+CENTRAL_BPS_DAY = 2.0          # central scenario: 1 bp/day parametric drift + 1 bp/day borrow
+BORROW_ONLY_BPS_DAY = 1.0      # realistic-B: borrow only
 COST = CostModel()
 RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
@@ -42,11 +43,9 @@ def basis_daily(coin: str) -> pd.Series:
     return stats.to_daily(pd.Series(pnl["pnl"].to_numpy(), index=pd.DatetimeIndex(pnl["ts"])))
 
 
-def net(daily_gross: pd.Series, realistic: bool = False) -> pd.Series:
-    drag = COST.amortised_daily(len(daily_gross))
-    if realistic:
-        drag = drag + (CENTRAL_DRIFT_BPS_DAY + CENTRAL_BORROW_BPS_DAY) / 1e4
-    return daily_gross - drag
+def net(daily_gross: pd.Series, drag_bps: float = 0.0) -> pd.Series:
+    """Net of the amortised round trip plus a per-day drag in basis points."""
+    return daily_gross - COST.amortised_daily(len(daily_gross)) - drag_bps / 1e4
 
 
 def main() -> None:
@@ -65,46 +64,58 @@ def main() -> None:
     def basket(series: dict[str, pd.Series], exclude=()) -> pd.Series:
         return portfolio.equal_weight_basket(series, exclude=exclude)
 
-    # Deflation benchmark: same search set as the ablation (rung x coin, rung x basket).
-    trials: list[float] = []
+    # Two deflation benchmarks: the four rungs of every coin and basket (the ablation's search
+    # set on this window), and the hedged rungs alone (basis-drift, realistic, realistic-B).
+    all_rungs: list[float] = []
+    hedged: list[float] = []
     for coin in basis:
-        trials.append(stats.psr_inputs(net(funding[coin]))[0])
-        trials.append(stats.psr_inputs(net(basis[coin]))[0])
-        trials.append(stats.psr_inputs(net(basis[coin], realistic=True))[0])
+        all_rungs.append(stats.psr_inputs(net(funding[coin]))[0])
+        for drag in (0.0, CENTRAL_BPS_DAY, BORROW_ONLY_BPS_DAY):
+            sr = stats.psr_inputs(net(basis[coin], drag))[0]
+            all_rungs.append(sr)
+            hedged.append(sr)
     for exclude in ((), (DROP,)):
         f_bk, b_bk = basket(funding, exclude), basket(basis, exclude)
-        trials.append(stats.psr_inputs(net(f_bk))[0])
-        trials.append(stats.psr_inputs(net(b_bk))[0])
-        trials.append(stats.psr_inputs(net(b_bk, realistic=True))[0])
-    n_trials = len(trials)
-    var_sr = float(np.var(np.asarray(trials, dtype=float), ddof=1))
+        all_rungs.append(stats.psr_inputs(net(f_bk))[0])
+        for drag in (0.0, CENTRAL_BPS_DAY, BORROW_ONLY_BPS_DAY):
+            sr = stats.psr_inputs(net(b_bk, drag))[0]
+            all_rungs.append(sr)
+            hedged.append(sr)
+    n_all = len(all_rungs)
+    var_all = float(np.var(np.asarray(all_rungs, dtype=float), ddof=1))
+    n_hedged = len(hedged)
+    var_hedged = float(np.var(np.asarray(hedged, dtype=float), ddof=1))
 
     rows = {
         "buy-and-hold BTC": net(bh["BTC"]),
         "equal-weight spot": net(basket(bh)),
         "naive carry (drop-SOL)": net(basket(funding, (DROP,))),
         "basis-drift (drop-SOL)": net(basket(basis, (DROP,))),
-        "realistic (drop-SOL)": net(basket(basis, (DROP,)), realistic=True),
+        "realistic (drop-SOL)": net(basket(basis, (DROP,)), CENTRAL_BPS_DAY),
+        "realistic-B (drop-SOL)": net(basket(basis, (DROP,)), BORROW_ONLY_BPS_DAY),
     }
 
-    print("=" * 72)
+    print("=" * 84)
     print("Strategy versus baselines: one common window, one amortised round trip")
-    print(f"  trials N={n_trials}; cross-trial Sharpe variance var_sr={var_sr:.5f}; clears at DSR > 0.95")
-    print("=" * 72)
-    print(f"\n{'series':<24} {'T':>4} {'ann_Sharpe':>11} {'ann_ret%':>10} {'DSR':>8}")
-    print("-" * 72)
+    print(f"  all rungs N={n_all}, var_sr={var_all:.5f}; hedged rungs N={n_hedged}, var_sr={var_hedged:.5f}; "
+          f"clears at DSR > 0.95")
+    print("=" * 84)
+    print(f"\n{'series':<24} {'T':>4} {'ann_Sharpe':>11} {'ann_ret%':>10} {'DSR_all':>8} {'DSR_hedged':>11}")
+    print("-" * 84)
     payload: dict[str, dict] = {}
     for name, daily_net in rows.items():
         sr, T, skew, kurt = stats.psr_inputs(daily_net)
         ann_sr, ann_ret, _ = stats.annualised_sharpe(daily_net)
-        dsr = stats.deflated_sharpe(sr, T, skew, kurt, n_trials, var_sr)
-        print(f"  {name:<22} {T:>4} {ann_sr:>11.2f} {ann_ret * 100:>9.2f}% {dsr:>8.3f}")
-        payload[name] = {"ann_sharpe": round(ann_sr, 4), "ann_ret": round(ann_ret, 6), "dsr": round(dsr, 4)}
+        d_all = stats.deflated_sharpe(sr, T, skew, kurt, n_all, var_all)
+        d_hedged = stats.deflated_sharpe(sr, T, skew, kurt, n_hedged, var_hedged)
+        print(f"  {name:<22} {T:>4} {ann_sr:>11.2f} {ann_ret * 100:>9.2f}% {d_all:>8.3f} {d_hedged:>11.3f}")
+        payload[name] = {"ann_sharpe": round(ann_sr, 4), "ann_ret": round(ann_ret, 6),
+                         "dsr_all": round(d_all, 4), "dsr_hedged": round(d_hedged, 4)}
 
     span = f"{common.min():%Y-%m-%d}/{common.max():%Y-%m-%d}"
     saved, h = results.record_run(RESULTS_ROOT, "baselines_head_to_head",
                                   {"coins": SPOT_COINS, "drop": DROP, "window": span,
-                                   "n_trials": n_trials}, payload, span)
+                                   "n_trials": {"all": n_all, "hedged": n_hedged}}, payload, span)
     print(f"\n[results] {'recorded' if saved else 'already recorded'} {h}  window {span}")
 
 
