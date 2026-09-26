@@ -9,8 +9,8 @@ Capture runs eight WebSocket connection groups (5 streaming + 3 ctx, 148 subs to
 Python 3.10+.
 
 ```bash
-git clone https://github.com/louis-0/hyperliquid.git
-cd hyperliquid
+git clone https://github.com/louis-0/hyperliquid_final.git
+cd hyperliquid_final
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -32,6 +32,8 @@ Small, unit-tested modules:
 | `hlq.explain` | SHAP attribution over the fitted model (Lundberg & Lee 2017) |
 | `hlq.baselines` | Naive prediction baselines (majority class, persistence) |
 | `hlq.timing` | Next-hour funding-sign model (XGBoost) and its SHAP drivers, shared by the ML backtest and the dashboard |
+| `hlq.microfeatures` | Hourly features from the captured tape (book imbalance, spread, taker flow, premium, cohort flow) via DuckDB |
+| `hlq.flow` | Signed trade flows, fixed-length bars, rank correlation and top-decile forward moves |
 | `hlq.results` | Run store keyed by a config hash, with no silent overwrite |
 
 Backtests are thin scripts over the package:
@@ -40,8 +42,20 @@ Backtests are thin scripts over the package:
 python scripts/run_chassis.py         # funding-carry chassis: per coin + equal-weight basket
 python scripts/run_basis_drift.py     # basis-drift-inclusive PnL: per coin + basket
 python scripts/run_regime.py          # basis-drift Sharpe split by bear/bull/calm regime
+python scripts/run_cost_sweep.py      # drift x borrow x fee-multiplier sensitivity on the drop-SOL basket
+python scripts/run_dsr_ablation.py    # four rungs per coin and basket, deflated Sharpe
+python scripts/run_baselines.py       # strategy rungs vs buy-and-hold and naive carry on one window
 python scripts/run_l2_slippage.py     # realised slippage walked from the captured order books
-python scripts/run_ml_feasibility.py  # XGBoost vs naive baselines, with SHAP drivers
+python scripts/run_carry_ledger.py    # carry basket as one measured round trip per coin
+python scripts/run_ml_feasibility.py  # XGBoost vs naive and classical baselines, with SHAP drivers
+python scripts/run_fused_ml.py        # candle features vs candle + tape features on the same split
+python scripts/run_ml_gated_ledger.py # carry gated by the funding-sign model, per-trade ledger
+python scripts/run_obi.py             # order-book imbalance vs forward mid return on 5 s bars
+python scripts/run_obi_ledger.py      # imbalance scalp as a per-trade ledger
+python scripts/run_informed_flow.py   # frozen-cohort flow vs anonymous taker flow on 30 s bars
+python scripts/run_perp_dispersion.py # short high-funding perps against low-funding perps
+python scripts/build_wallet_labels.py # per-wallet PnL and the is_smart label set, frozen at --end
+python scripts/data_layer_metrics.py  # capture coverage, latency, and hourly integrity
 ```
 
 Each run records its config and headline numbers under `results/` (gitignored), keyed by a config hash, so a run is reproducible and re-running is idempotent.
@@ -54,16 +68,16 @@ pytest -q
 
 ## The advisor dashboard
 
-A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario returns "do not deploy". A signal panel shows the per-coin degradation ladder (funding-only to basis-drift to realistic net Sharpe) and the macro regime as of the data's last timestamp. An explainability panel trains the funding-sign model on demand and reports its top SHAP drivers, and a smart-money cohort panel shows a frozen cohort's aggregate net directional flow and share of turnover per coin, never individual wallets.
+A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and any extra basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario (11 bp round trip, 1 bp per day borrow) returns "marginal". A signal panel shows the per-coin degradation ladder (funding-only, basis-drift, net of fees and borrow) and the macro regime as of the data's last timestamp. An explainability panel trains the funding-sign model on demand and reports its top SHAP drivers, and a smart-money cohort panel shows a frozen cohort's aggregate net directional flow and share of turnover per coin, never individual wallets.
 
 ```bash
 uvicorn app.main:app --reload      # then open http://127.0.0.1:8000
 ```
 
-No live orders; it reads the local capture (point `HLQ_DATA_ROOT` elsewhere to override). The cohort panel reads `app/cohort_snapshot.json`, a small aggregate built once from the captured trades and a frozen cohort label set:
+No live orders; it reads the local capture (point `HLQ_DATA_ROOT` elsewhere to override). The cohort panel reads `app/cohort_snapshot.json`, a small aggregate built once from the captured trades and a cohort label set frozen at 2026-06-23, over the post-freeze tape to 2026-08-22:
 
 ```bash
-python scripts/build_cohort_snapshot.py /path/to/wallet_labels.parquet
+python scripts/build_cohort_snapshot.py data/wallet_labels_2026-06-23.parquet --start 2026-06-23 --end 2026-08-22
 ```
 
 Only the collapsed per-coin aggregate (net flow, share of turnover, leg count) is written; no wallet address enters the repo.
@@ -132,8 +146,8 @@ hyperliquid/
 ├── ws_capture.py             WS daemon
 ├── fetch_rest_history.py     REST funding + mark-candle fetcher
 ├── fetch_spot_history.py     REST spot-candle fetcher (@index pairs)
-├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, timing, results)
-├── scripts/                  runnable backtests (run_chassis/basis_drift/regime/l2_slippage/ml_feasibility) + build_cohort_snapshot
+├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, timing, microfeatures, flow, results)
+├── scripts/                  runnable backtests, ledgers, and studies (see the list above) + build_wallet_labels, build_cohort_snapshot, data_layer_metrics
 ├── app/                      advisor dashboard (FastAPI + Jinja2, read-only over hlq; cohort_snapshot.json)
 ├── tests/                    pytest suite (run off data_sample/)
 ├── requirements.txt
