@@ -4,7 +4,7 @@
 Books the drop-SOL basket as one round trip per coin: entry and exit slippage measured by
 walking the first and last captured order books at the target notional, taker fees charged
 per leg on both sides, spot borrow charged per day, funding and basis drift accrued from the
-realized hourly series. Every cost in the ledger is either
+realised hourly series. Every cost in the ledger is either
 measured from the capture or an explicit fee-schedule constant.
 
     python scripts/run_carry_ledger.py

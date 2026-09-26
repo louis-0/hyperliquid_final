@@ -27,7 +27,7 @@ from pathlib import Path
 import pandas as pd
 import requests
 
-from ws_capture import COINS  # 27 assets the daemon subscribes to
+from ws_capture import COINS  # the assets the daemon subscribes to
 
 BASE = Path(__file__).parent
 DATA_FUNDING = BASE / "data" / "funding"
@@ -179,7 +179,7 @@ def main(coins: list[str], interval: str, start_ms: int, end_ms: int) -> None:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("coins", nargs="*", help="coins to fetch (default: all 27)")
+    parser.add_argument("coins", nargs="*", help="coins to fetch (default: every captured asset)")
     parser.add_argument("--interval", default="1h",
                         help="candle interval: 1m, 5m, 15m, 1h, 4h, 1d (default: 1h)")
     parser.add_argument("--start", default=None,

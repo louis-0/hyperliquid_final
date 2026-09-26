@@ -4,7 +4,7 @@
 Trades the chassis on the funding-sign classifier's out-of-sample calls: hold the hedged
 position through every run of consecutive predicted-positive hours, exit when the model
 predicts negative funding, re-enter on the next positive call. Each round trip is debited
-the taker fee on all four legs; funding is accrued from the realized series while held.
+the taker fee on all four legs; funding is accrued from the realised series while held.
 The always-on chassis on the same window, paying one round trip, is printed alongside.
 
     python scripts/run_ml_gated_ledger.py
@@ -32,7 +32,7 @@ def gated_trades(df: pd.DataFrame) -> tuple[pd.DataFrame, float, int]:
     clf, train, test = timing.train_sign_model(df)
     proba = clf.predict_proba(test[features.FEATURES])[:, 1]
     pred = (proba > 0.5).astype(int)
-    fund = test["target_fund"].to_numpy()          # realized funding for the predicted hour
+    fund = test["target_fund"].to_numpy()          # realised funding for the predicted hour
     hours = pd.to_datetime(test["hour"]).to_numpy()
 
     rows = []

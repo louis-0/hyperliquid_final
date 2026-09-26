@@ -4,7 +4,7 @@
 Runs the chassis at four levels of realism on one common window: a funding-only upper bound,
 a basis-drift-inclusive rung, a realistic rung charging the full central scenario (1 bp/day
 parametric drift + 1 bp/day spot borrow + taker fees), and a realistic-B rung charging fees
-and borrow only, since the basis-drift series already carries the realized drift. Reports
+and borrow only, since the basis-drift series already carries the realised drift. Reports
 every coin and basket composition, deflates each realistic rung at the trial count and
 cross-trial variance of the full rung x coin and rung x basket search set, and quotes a
 block-bootstrap confidence interval for the deployable rungs.
@@ -27,7 +27,7 @@ from hlq.costs import CostModel
 SPOT_COINS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"]
 DROP = "SOL"
 REALISTIC_BPS = 2.0        # central scenario: 1 bp/day parametric drift + 1 bp/day borrow
-BORROW_ONLY_BPS = 1.0      # realistic-B: borrow only; realized drift already sits in the PnL
+BORROW_ONLY_BPS = 1.0      # realistic-B: borrow only; realised drift already sits in the PnL
 COST = CostModel()
 RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
