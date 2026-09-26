@@ -5,8 +5,14 @@ data/
 logs/
 *.log
 
-# Recorded run outputs (ResultsStore)
-results/
+# Recorded run outputs (ResultsStore): the JSON records and the ledgers are tracked
+# (imbalance ledgers gzipped); the archive and raw imbalance CSVs are not
+results/*
+!results/*.json
+!results/carry_ledger.csv
+!results/carry_ledger_daily.csv
+!results/ml_gated_ledger_*.csv
+!results/obi_ledger_*.csv.gz
 
 # Python
 __pycache__/

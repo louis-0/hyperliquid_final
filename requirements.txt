@@ -8,6 +8,7 @@ scipy>=1.11        # deflated Sharpe (normal CDF)
 xgboost>=2.0       # funding-timing model
 shap>=0.44         # feature attribution (Lundberg & Lee 2017)
 scikit-learn>=1.4  # random-forest and logistic baselines, model metrics
+matplotlib>=3.8    # ledger figure
 fastapi>=0.110     # advisor dashboard
 uvicorn>=0.29      # dashboard server
 jinja2>=3.1        # dashboard templates

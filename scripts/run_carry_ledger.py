@@ -5,7 +5,9 @@ Books the drop-SOL basket as one round trip per coin: entry and exit slippage me
 walking the first and last captured order books at the target notional, taker fees charged
 per leg on both sides, spot borrow charged per day, funding and basis drift accrued from the
 realised hourly series. Every cost in the ledger is either
-measured from the capture or an explicit fee-schedule constant.
+measured from the capture or an explicit fee-schedule constant. At the default notional the per-coin
+round trips are written to results/carry_ledger.csv and the daily net series, in basis points,
+to results/carry_ledger_daily.csv.
 
     python scripts/run_carry_ledger.py
     python scripts/run_carry_ledger.py --notional 100000
@@ -27,6 +29,7 @@ from hlq.costs import CostModel
 COINS = ["BTC", "ETH", "HYPE"]         # the drop-SOL basket
 START, END = "2026-06-04", "2026-08-22"  # captured-book window, complete days
 BORROW_BPS_DAY = 1.0
+DEFAULT_NOTIONAL = 10_000.0            # the ledger files are written at this notional only
 COST = CostModel()
 RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
@@ -107,9 +110,16 @@ def main(notional: float) -> None:
         print(f"{'coin':<6} {'entry':>12} {'exit':>12} {'hold_d':>7} {'net_bps':>9} {'net_$':>10}")
         for c, t0, t1, hd, nb in trade_rows:
             print(f"  {c:<6} {t0:>12} {t1:>12} {hd:>7} {nb * 1e4:>+9.1f} {nb * notional:>+10.2f}")
+        if notional == DEFAULT_NOTIONAL:
+            pd.DataFrame(trade_rows, columns=["coin", "entry", "exit", "hold_d", "net"]).assign(
+                net_bps=lambda d: d["net"] * 1e4, notional=notional).to_csv(RESULTS_ROOT / "carry_ledger.csv", index=False)
 
     if ledgers:
-        basket = pd.concat([l["daily_net"] for l in ledgers.values()], axis=1).dropna().mean(axis=1)
+        daily = pd.concat([l["daily_net"] for l in ledgers.values()], axis=1, keys=list(ledgers)).dropna()
+        basket = daily.mean(axis=1)
+        if notional == DEFAULT_NOTIONAL:
+            daily.assign(basket=basket).mul(1e4).rename_axis("day").to_csv(
+                RESULTS_ROOT / "carry_ledger_daily.csv", float_format="%.4f")
         sr, ret, _ = stats.annualised_sharpe(basket)
         total = float(basket.sum())
         print("-" * 78)
@@ -128,5 +138,5 @@ def main(notional: float) -> None:
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    p.add_argument("--notional", type=float, default=10_000.0)
+    p.add_argument("--notional", type=float, default=DEFAULT_NOTIONAL)
     main(p.parse_args().notional)

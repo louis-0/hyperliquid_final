@@ -58,7 +58,7 @@ python scripts/build_wallet_labels.py # per-wallet PnL and the is_smart label se
 python scripts/data_layer_metrics.py  # capture coverage, latency, and hourly integrity
 ```
 
-Each run records its config and headline numbers under `results/` (gitignored), keyed by a config hash, so a run is reproducible and re-running is idempotent.
+Each run records its config and headline numbers under `results/`, keyed by a config hash, so a run is reproducible and re-running is idempotent. The JSON records and every ledger are committed, the imbalance ledgers gzipped.
 
 Tests run off the committed `data_sample/`, so they need no real data:
 
@@ -68,7 +68,7 @@ pytest -q
 
 ## The advisor dashboard
 
-A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and any extra basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario (11 bp round trip, 1 bp per day borrow) returns "marginal". A signal panel shows the per-coin degradation ladder (funding-only, basis-drift, net of fees and borrow) and the macro regime as of the data's last timestamp. An explainability panel trains the funding-sign model on demand and reports its top SHAP drivers, and a smart-money cohort panel shows a frozen cohort's aggregate net directional flow and share of turnover per coin, never individual wallets.
+A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and any extra basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario (11 bp round trip, 1 bp per day borrow) returns "marginal". A signal panel shows the per-coin degradation ladder (funding-only, basis-drift, net of fees and borrow) and the macro regime as of the data's last timestamp. A ledger panel puts the three per-trade ledgers side by side (round trips, per-coin and basket nets, record hashes) with their cumulative curves drawn from the committed ledger files. An explainability panel trains the funding-sign model on demand and reports its top SHAP drivers, and a smart-money cohort panel shows a frozen cohort's aggregate net flow and share of turnover per coin, never individual wallets.
 
 ```bash
 uvicorn app.main:app --reload      # then open http://127.0.0.1:8000
@@ -80,7 +80,12 @@ No live orders; it reads the local capture (point `HLQ_DATA_ROOT` elsewhere to o
 python scripts/build_cohort_snapshot.py data/wallet_labels_2026-06-23.parquet --start 2026-06-23 --end 2026-08-22
 ```
 
-Only the collapsed per-coin aggregate (net flow, share of turnover, leg count) is written; no wallet address enters the repo.
+Only the collapsed per-coin aggregate (net flow, share of turnover, leg count) is written; no wallet address enters the repo. The ledger panel reads `app/ledger_snapshot.json` and `app/static/ledger_trilogy.png`, both built from the recorded ledgers:
+
+```bash
+python scripts/build_ledger_snapshot.py   # per-strategy table from the recorded ledger results
+python scripts/build_ledger_figure.py      # cumulative curves from results/*ledger*.csv[.gz]
+```
 
 ## Run (capture)
 
@@ -147,8 +152,8 @@ hyperliquid/
 ├── fetch_rest_history.py     REST funding + mark-candle fetcher
 ├── fetch_spot_history.py     REST spot-candle fetcher (@index pairs)
 ├── hlq/                      analysis package (data, stats, costs, signals, portfolio, execution, features, explain, baselines, timing, microfeatures, flow, results)
-├── scripts/                  runnable backtests, ledgers, and studies (see the list above) + build_wallet_labels, build_cohort_snapshot, data_layer_metrics
-├── app/                      advisor dashboard (FastAPI + Jinja2, read-only over hlq; cohort_snapshot.json)
+├── scripts/                  runnable backtests, ledgers, and studies (see the list above) + build_wallet_labels, build_cohort_snapshot, build_ledger_snapshot, build_ledger_figure, data_layer_metrics
+├── app/                      advisor dashboard (FastAPI + Jinja2, read-only over hlq; cohort_snapshot.json, ledger_snapshot.json)
 ├── tests/                    pytest suite (run off data_sample/)
 ├── requirements.txt
 ├── pytest.ini
@@ -157,6 +162,6 @@ hyperliquid/
 │   └── arch_replication.py
 ├── data_sample/              BTC 24h + 90d REST (see MANIFEST.md)
 ├── data/                     gitignored
-├── results/                  recorded run outputs, gitignored
+├── results/                  recorded run outputs (JSON records and ledgers committed; raw imbalance CSVs ignored)
 └── logs/                     gitignored
 ```

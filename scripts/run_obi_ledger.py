@@ -5,7 +5,7 @@ Trades the top-of-book imbalance as an event strategy: the entry thresholds are 
 bottom deciles of the signal over the first 30 percent of bars, and the remaining bars are
 traded out of sample. Entries are non-overlapping (one position at a time), held a fixed
 number of bars, and each trade is debited the measured bar spread plus the taker fee on both
-sides. The full ledger is written per coin as CSV; the printout shows a sample and totals.
+sides. The full ledger is written per coin as gzipped CSV; the printout shows a sample and totals.
 
     python scripts/run_obi_ledger.py --start 2026-06-23 --end 2026-08-22
 """
@@ -97,7 +97,7 @@ def main(start: str, end: str, coins: list[str]) -> None:
             print(f"  {coin}: insufficient bars")
             continue
         t = coin_trades(g)
-        out = RESULTS_ROOT / f"obi_ledger_{coin}.csv"
+        out = RESULTS_ROOT / f"obi_ledger_{coin}.csv.gz"
         t.to_csv(out, index=False)
         wins = (t["net_bps"] > 0).mean() * 100
         gross_wins = (t["gross_bps"] > 0).mean() * 100

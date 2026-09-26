@@ -5,7 +5,8 @@ Trades the chassis on the funding-sign classifier's out-of-sample calls: hold th
 position through every run of consecutive predicted-positive hours, exit when the model
 predicts negative funding, re-enter on the next positive call. Each round trip is debited
 the taker fee on all four legs; funding is accrued from the realised series while held.
-The always-on chassis on the same window, paying one round trip, is printed alongside.
+The always-on chassis on the same window, paying one round trip, is printed alongside, and each
+coin's trades are written to results/ml_gated_ledger_{coin}.csv.
 
     python scripts/run_ml_gated_ledger.py
 """
@@ -67,6 +68,7 @@ def main() -> None:
         if trades.empty:
             print(f"  {coin}: no trades")
             continue
+        trades.to_csv(RESULTS_ROOT / f"ml_gated_ledger_{coin}.csv", index=False)
         gated_net = float(trades["net_bps"].sum())
         always_net = (fund_all - RT_COST) * 1e4
         print(f"\n{coin}: {len(trades)} trades over {n_hours} out-of-sample hours")
