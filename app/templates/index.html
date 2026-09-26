@@ -11,7 +11,8 @@
   <h1>Cost-aware funding-carry advisor</h1>
   <p class="sub">Hyperliquid funding basis, long spot and short perp. The carry is a funding
   premium; the question is whether it survives your cost floor. Anchors: He et al. (2024),
-  BTC Sharpe {{ retail_anchor }} retail and {{ mm_anchor }} market-maker.</p>
+  BTC Sharpe {{ retail_anchor }} retail and {{ mm_anchor }} market-maker. Every panel reads the
+  data snapshot dated below; nothing on this page is live.</p>
   <p class="regime">Macro regime as of {{ asof }} (30-day BTC return): <strong>{{ regime }}</strong></p>
 </header>
 
@@ -90,7 +91,7 @@
 <section class="cohort">
   <h2>Smart-money cohort net flow (aggregate)</h2>
   {% if cohort %}
-  <p class="hint">Net directional lean of a frozen smart-money cohort
+  <p class="hint">Net flow of a frozen smart-money cohort
   ({{ '{:,}'.format(cohort.provenance.n_smart_wallets) }} wallets, is_smart =
   {{ cohort.provenance.is_smart_rule }}), applied to this project's captured trade flow over
   {{ cohort.provenance.window_start }} to {{ cohort.provenance.window_end }}. Aggregate only:
@@ -98,12 +99,11 @@
   top-decile forward move is one to two basis points against a round-trip cost near nine, so it
   is shown as context, not as a trade signal.</p>
   <table>
-    <thead><tr><th>coin</th><th>lean</th><th>net notional (USD)</th><th>net as % of cohort turnover</th><th>cohort share of turnover</th><th>legs</th></tr></thead>
+    <thead><tr><th>coin</th><th>net notional (USD)</th><th>net as % of cohort turnover</th><th>cohort share of turnover</th><th>legs</th></tr></thead>
     <tbody>
     {% for coin, c in cohort.coins.items() %}
       <tr>
         <td>{{ coin }}</td>
-        <td>{{ c.lean }}</td>
         <td>{{ '{:+,.0f}'.format(c.net_notional) }}</td>
         <td>{% if c.cohort_notional %}{{ '%+.2f' | format(c.net_notional / c.cohort_notional * 100) }}%{% else %}n/a{% endif %}</td>
         <td>{{ '%.1f' | format(c.cohort_share * 100) }}%</td>
@@ -121,7 +121,7 @@
 
 <footer>
   <p>Read-only advisory over the tested <code>hlq</code> package; no live orders. The smart-money
-  cohort panel is a frozen aggregate snapshot: net directional trade flow, never individual wallets.</p>
+  cohort panel is a frozen aggregate snapshot: net trade flow, never individual wallets.</p>
 </footer>
 
 <script>

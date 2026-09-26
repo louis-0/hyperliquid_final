@@ -7,17 +7,20 @@ net directional lean, its share of turnover, and the leg count, over the capture
 the collapsed aggregate is written; no wallet address ever leaves this script, so the committed
 snapshot exposes cohort-level net flow, not individual wallets.
 
-    python scripts/build_cohort_snapshot.py /path/to/wallet_labels.parquet
-    python scripts/build_cohort_snapshot.py /path/to/wallet_labels.parquet BTC ETH
+    python scripts/build_cohort_snapshot.py data/wallet_labels_2026-06-23.parquet --start 2026-06-23 --end 2026-08-22
+    python scripts/build_cohort_snapshot.py data/wallet_labels_2026-06-23.parquet --start 2026-06-23 BTC ETH
 
 The labels parquet must have a `wallet` column and a boolean `is_smart` column. Its sha256 and
-row counts are recorded in the snapshot for provenance.
+row counts are recorded in the snapshot for provenance. Pass --start at the label freeze so the
+aggregate reads only tape the cohort was not selected on; --end is exclusive.
 """
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import duckdb
@@ -28,7 +31,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq wh
 from app import cohort
 from hlq import data
 
-CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]
+CHASSIS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"]
 IS_SMART_RULE = ">=100 trades and realised PnL >= 80th percentile of active wallets"
 OUT = Path(__file__).resolve().parent.parent / "app" / "cohort_snapshot.json"
 
@@ -43,9 +46,10 @@ def smart_wallets(labels_path: Path) -> tuple[set[str], int, int]:
     return smart, len(df), len(smart)
 
 
-def coin_aggregate(coin: str, smart: set[str], root: Path) -> dict | None:
+def coin_aggregate(coin: str, smart: set[str], root: Path, start_ms: int, end_ms: int) -> dict | None:
     """Net cohort notional, cohort turnover, leg count, and window for one coin, or None if the
-    coin has no captured trades. Positive net notional means the cohort was a net buyer."""
+    coin has no captured trades in the window. Positive net notional means the cohort was a net
+    buyer."""
     src = str(root / "ws" / coin / "trades" / "**" / "*.parquet")
     con = duckdb.connect()
     con.execute("PRAGMA memory_limit='4GB'")
@@ -53,10 +57,12 @@ def coin_aggregate(coin: str, smart: set[str], root: Path) -> dict | None:
     q = f"""
     WITH legs AS (
       SELECT users_buyer AS w, +notional AS signed_n, notional AS n, trade_ms
-      FROM read_parquet('{src}') WHERE users_buyer IS NOT NULL
+      FROM read_parquet('{src}')
+      WHERE users_buyer IS NOT NULL AND trade_ms >= {start_ms} AND trade_ms < {end_ms}
       UNION ALL
       SELECT users_seller, -notional, notional, trade_ms
-      FROM read_parquet('{src}') WHERE users_seller IS NOT NULL
+      FROM read_parquet('{src}')
+      WHERE users_seller IS NOT NULL AND trade_ms >= {start_ms} AND trade_ms < {end_ms}
     )
     SELECT SUM(CASE WHEN s.w IS NOT NULL THEN l.signed_n ELSE 0 END) AS net_notional,
            SUM(CASE WHEN s.w IS NOT NULL THEN l.n ELSE 0 END)        AS cohort_notional,
@@ -75,13 +81,18 @@ def coin_aggregate(coin: str, smart: set[str], root: Path) -> dict | None:
     return agg
 
 
-def main(labels_path: Path, coins: list[str]) -> None:
+def main(labels_path: Path, coins: list[str], start: str | None, end: str | None) -> None:
+    start_ms = (int(datetime.strptime(start, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
+                if start else 0)
+    end_ms = (int(datetime.strptime(end, "%Y-%m-%d").replace(tzinfo=timezone.utc).timestamp() * 1000)
+              if end else 1 << 62)
     smart, n_rows, n_smart = smart_wallets(labels_path)
-    print(f"cohort: {n_smart:,} of {n_rows:,} wallets are is_smart  ({labels_path.name})")
+    print(f"cohort: {n_smart:,} of {n_rows:,} wallets are is_smart  ({labels_path.name}); "
+          f"tape {start or 'tape start'} to {end or 'tape end'}")
 
     coins_out: dict[str, dict] = {}
     for coin in coins:
-        agg = coin_aggregate(coin, smart, data.DATA_ROOT)
+        agg = coin_aggregate(coin, smart, data.DATA_ROOT, start_ms, end_ms)
         if agg is None:
             print(f"  {coin:5} no captured trades, skipped")
             continue
@@ -92,6 +103,7 @@ def main(labels_path: Path, coins: list[str]) -> None:
     spans = [c["window_start"] for c in coins_out.values()] + [c["window_end"] for c in coins_out.values()]
     snapshot = {
         "provenance": {
+            "labels": labels_path.name,
             "cohort_sha256_16": sha16(labels_path),
             "n_smart_wallets": n_smart,
             "n_cohort_wallets": n_rows,
@@ -107,6 +119,10 @@ def main(labels_path: Path, coins: list[str]) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        raise SystemExit("usage: build_cohort_snapshot.py <wallet_labels.parquet> [COIN ...]")
-    main(Path(sys.argv[1]), sys.argv[2:] or CHASSIS)
+    p = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    p.add_argument("labels", help="wallet labels parquet (wallet, is_smart)")
+    p.add_argument("--start", default=None, help="tape window start YYYY-MM-DD (default: tape start)")
+    p.add_argument("--end", default=None, help="tape window end YYYY-MM-DD, exclusive (default: tape end)")
+    p.add_argument("coins", nargs="*", default=[])
+    args = p.parse_args()
+    main(Path(args.labels), args.coins or CHASSIS, args.start, args.end)

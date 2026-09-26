@@ -1,58 +1,70 @@
 {
   "provenance": {
-    "cohort_sha256_16": "ed4b15081ac50514",
-    "n_smart_wallets": 4925,
-    "n_cohort_wallets": 130880,
+    "labels": "wallet_labels_2026-06-23.parquet",
+    "cohort_sha256_16": "0199727fb19a523d",
+    "n_smart_wallets": 4926,
+    "n_cohort_wallets": 130906,
     "is_smart_rule": ">=100 trades and realised PnL >= 80th percentile of active wallets",
-    "window_start": "2026-06-03",
-    "window_end": "2026-08-15",
+    "window_start": "2026-06-23",
+    "window_end": "2026-08-21",
     "coins": [
       "BTC",
       "ETH",
       "SOL",
-      "HYPE"
+      "HYPE",
+      "ZEC"
     ]
   },
   "coins": {
     "BTC": {
-      "net_notional": 31855650.477847815,
-      "cohort_notional": 128438951855.892,
-      "n_legs": 14797514,
-      "total_notional": 303249765350.829,
-      "cohort_share": 0.42354180128482954,
-      "lean": "net long",
-      "window_start": "2026-06-03",
-      "window_end": "2026-08-15"
+      "net_notional": -569163040.9105909,
+      "cohort_notional": 87721115870.55994,
+      "n_legs": 12182395,
+      "total_notional": 236277847822.98328,
+      "cohort_share": 0.371262548219415,
+      "lean": "net short",
+      "window_start": "2026-06-23",
+      "window_end": "2026-08-21"
     },
     "ETH": {
-      "net_notional": 33573293.35633528,
-      "cohort_notional": 41310018091.04121,
-      "n_legs": 7959060,
-      "total_notional": 118550235236.52177,
-      "cohort_share": 0.3484600263223672,
-      "lean": "net long",
-      "window_start": "2026-06-03",
-      "window_end": "2026-08-15"
+      "net_notional": -373789859.6897205,
+      "cohort_notional": 31486713507.642048,
+      "n_legs": 5059926,
+      "total_notional": 99865058512.61597,
+      "cohort_share": 0.31529259559452744,
+      "lean": "net short",
+      "window_start": "2026-06-23",
+      "window_end": "2026-08-21"
     },
     "SOL": {
-      "net_notional": 5542042.581186697,
-      "cohort_notional": 11707355154.330084,
-      "n_legs": 4844226,
-      "total_notional": 30518932783.06944,
-      "cohort_share": 0.38360958548409035,
-      "lean": "net long",
-      "window_start": "2026-06-03",
-      "window_end": "2026-08-15"
+      "net_notional": -114535369.08820078,
+      "cohort_notional": 7065404619.687102,
+      "n_legs": 2661341,
+      "total_notional": 23142819679.06984,
+      "cohort_share": 0.3052957555589906,
+      "lean": "net short",
+      "window_start": "2026-06-23",
+      "window_end": "2026-08-21"
     },
     "HYPE": {
-      "net_notional": 55988981.46870941,
-      "cohort_notional": 28632653158.205917,
-      "n_legs": 19233683,
-      "total_notional": 66361559500.715546,
-      "cohort_share": 0.4314644407640418,
-      "lean": "net long",
-      "window_start": "2026-06-03",
-      "window_end": "2026-08-15"
+      "net_notional": -72283767.93781713,
+      "cohort_notional": 12810664613.524843,
+      "n_legs": 8086250,
+      "total_notional": 42961190821.69318,
+      "cohort_share": 0.29819156239626676,
+      "lean": "net short",
+      "window_start": "2026-06-23",
+      "window_end": "2026-08-21"
+    },
+    "ZEC": {
+      "net_notional": -61836292.78460019,
+      "cohort_notional": 3724972983.444201,
+      "n_legs": 2153524,
+      "total_notional": 10261674159.838203,
+      "cohort_share": 0.3629985639207758,
+      "lean": "net short",
+      "window_start": "2026-06-23",
+      "window_end": "2026-08-21"
     }
   }
 }
