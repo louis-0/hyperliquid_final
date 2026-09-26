@@ -1,9 +1,9 @@
 """FastAPI advisor dashboard: a read-only, cost-aware view over the hlq package.
 
-The verdict is honest: for a retail taker the default screen returns "do not deploy", and the
-calculator lets a user enter their own fee tier, borrow, and drift to see when, and for whom,
-the funding carry becomes deployable against the He et al. (2024) anchors. Read-only, no live
-orders. Data is read from the local capture (override the root with HLQ_DATA_ROOT).
+The calculator lets a user enter their own fee tier, borrow, and any extra basis drift and see
+when, and for whom, the funding carry clears its cost floor against the He et al. (2024)
+anchors. Read-only, no live orders. Data is read from the local capture (override the root
+with HLQ_DATA_ROOT).
 """
 from __future__ import annotations
 
@@ -25,8 +25,8 @@ BASE = Path(__file__).resolve().parent
 COHORT_SNAPSHOT = BASE / "cohort_snapshot.json"
 COST = CostModel()
 CHASSIS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"]
-R11_BORROW_BPS_DAY = 1.0                 # central realistic borrow drag (Chapter 5, R11)
-R11_DRIFT_BPS_DAY = 1.0                  # central realistic basis-drift drag
+BORROW_BPS_DAY = 1.0                     # spot-borrow drag charged per day
+DRIFT_BPS_DAY = 0.0                      # extra drift on top of the realised basis-drift series
 
 app = FastAPI(title="Cost-aware funding-carry advisor")
 app.mount("/static", StaticFiles(directory=BASE / "static"), name="static")
@@ -66,7 +66,7 @@ def _net_for(coin: str, fee_bps: float, borrow_bps: float, drift_bps: float, roo
 
 
 def _panel(root: Path):
-    """Per-coin degradation ladder (funding-only -> basis-drift -> realistic net Sharpe), the
+    """Per-coin degradation ladder (funding-only -> basis-drift -> net of fees and borrow), the
     macro regime, and the data as-of date, for the signal panel."""
     regime, asof = "unknown", None
     try:
@@ -91,7 +91,7 @@ def _panel(root: Path):
             drift = _basis_drift_daily(coin, root)
             row["basis_drift"] = calc.net_metrics(drift, COST.round_trip(), 0.0, 0.0)["net_sharpe"]
             row["realistic"] = calc.net_metrics(drift, COST.round_trip(),
-                                                R11_BORROW_BPS_DAY, R11_DRIFT_BPS_DAY)["net_sharpe"]
+                                                BORROW_BPS_DAY, DRIFT_BPS_DAY)["net_sharpe"]
         except FileNotFoundError:
             pass
         rows.append(row)
@@ -136,8 +136,8 @@ def index(request: Request):
     root = _root()
     regime, asof, rows = _panel(root)
     coins = [r["coin"] for r in rows] or ["BTC"]
-    default = (_net_for("BTC", fee_bps=11.0, borrow_bps=R11_BORROW_BPS_DAY, drift_bps=R11_DRIFT_BPS_DAY, root=root)
-               or _net_for(coins[0], fee_bps=11.0, borrow_bps=R11_BORROW_BPS_DAY, drift_bps=R11_DRIFT_BPS_DAY, root=root))
+    default = (_net_for("BTC", fee_bps=11.0, borrow_bps=BORROW_BPS_DAY, drift_bps=DRIFT_BPS_DAY, root=root)
+               or _net_for(coins[0], fee_bps=11.0, borrow_bps=BORROW_BPS_DAY, drift_bps=DRIFT_BPS_DAY, root=root))
     return templates.TemplateResponse(request=request, name="index.html", context={
         "regime": regime, "asof": asof or "unknown", "rows": rows, "default": default,
         "coins": coins,
@@ -147,7 +147,7 @@ def index(request: Request):
 
 
 @app.get("/api/net")
-def api_net(coin: str = "BTC", fee_bps: float = 11.0, borrow_bps: float = 1.0, drift_bps: float = 1.0):
+def api_net(coin: str = "BTC", fee_bps: float = 11.0, borrow_bps: float = 1.0, drift_bps: float = 0.0):
     m = _net_for(coin, fee_bps, borrow_bps, drift_bps, _root())
     return m or {"error": f"no data for {coin}"}
 

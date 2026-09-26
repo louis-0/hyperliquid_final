@@ -9,16 +9,17 @@
 <body>
 <header>
   <h1>Cost-aware funding-carry advisor</h1>
-  <p class="sub">Hyperliquid funding basis, long spot and short perp. The carry is a real risk
-  premium; the honest question is whether it survives your cost floor. Anchors: He et al. (2024),
+  <p class="sub">Hyperliquid funding basis, long spot and short perp. The carry is a funding
+  premium; the question is whether it survives your cost floor. Anchors: He et al. (2024),
   BTC Sharpe {{ retail_anchor }} retail and {{ mm_anchor }} market-maker.</p>
   <p class="regime">Macro regime as of {{ asof }} (30-day BTC return): <strong>{{ regime }}</strong></p>
 </header>
 
 <section class="calc">
   <h2>Cost-floor calculator</h2>
-  <p class="hint">Enter your own fees and carrying costs. The default is the central retail-taker
-  scenario, which returns "do not deploy". Lower the fee tier or switch to maker to see it change.</p>
+  <p class="hint">Enter your own fees and carrying costs. The default is a retail taker paying
+  1 bp per day to borrow the spot leg. Move the borrow rate to see the verdict change; the series
+  already carries the realised basis drift, so add drift only as a stress case.</p>
   <form id="calc-form">
     <label>Coin
       <select name="coin">
@@ -31,8 +32,8 @@
     <label>Borrow (bps per day)
       <input type="number" name="borrow_bps" value="1" step="0.5" min="0">
     </label>
-    <label>Basis drift (bps per day)
-      <input type="number" name="drift_bps" value="1" step="0.5" min="0">
+    <label>Extra basis drift (bps per day)
+      <input type="number" name="drift_bps" value="0" step="0.5" min="0">
     </label>
   </form>
   <div class="result">
@@ -53,9 +54,9 @@
 <section class="panel">
   <h2>Signal panel: the degradation ladder</h2>
   <p class="hint">Per coin, the funding-only Sharpe falls as basis-drift variance and then
-  realistic costs are added. A real premium, consumed by the cost floor.</p>
+  fees and borrow are added. A real premium, consumed by the cost floor.</p>
   <table>
-    <thead><tr><th>coin</th><th>funding APR</th><th>funding-only SR</th><th>basis-drift SR</th><th>realistic net SR</th></tr></thead>
+    <thead><tr><th>coin</th><th>funding APR</th><th>funding-only SR</th><th>basis-drift SR</th><th>net SR (fees + borrow)</th></tr></thead>
     <tbody>
     {% for r in rows %}
       <tr>
@@ -93,15 +94,18 @@
   ({{ '{:,}'.format(cohort.provenance.n_smart_wallets) }} wallets, is_smart =
   {{ cohort.provenance.is_smart_rule }}), applied to this project's captured trade flow over
   {{ cohort.provenance.window_start }} to {{ cohort.provenance.window_end }}. Aggregate only:
-  net flow and share of turnover, never individual wallets.</p>
+  net flow and share of turnover, never individual wallets. Cost caveat: on this tape the flow's
+  top-decile forward move is one to two basis points against a round-trip cost near nine, so it
+  is shown as context, not as a trade signal.</p>
   <table>
-    <thead><tr><th>coin</th><th>lean</th><th>net notional (USD)</th><th>cohort share of turnover</th><th>legs</th></tr></thead>
+    <thead><tr><th>coin</th><th>lean</th><th>net notional (USD)</th><th>net as % of cohort turnover</th><th>cohort share of turnover</th><th>legs</th></tr></thead>
     <tbody>
     {% for coin, c in cohort.coins.items() %}
       <tr>
         <td>{{ coin }}</td>
         <td>{{ c.lean }}</td>
         <td>{{ '{:+,.0f}'.format(c.net_notional) }}</td>
+        <td>{% if c.cohort_notional %}{{ '%+.2f' | format(c.net_notional / c.cohort_notional * 100) }}%{% else %}n/a{% endif %}</td>
         <td>{{ '%.1f' | format(c.cohort_share * 100) }}%</td>
         <td>{{ '{:,}'.format(c.n_legs) }}</td>
       </tr>
