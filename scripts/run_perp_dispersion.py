@@ -62,7 +62,7 @@ def main() -> None:
     picks = []
     for i in range(look, len(hours) - 1, step):
         window = fund.iloc[i - look:i]
-        alive = window.columns[(window.notna().mean() > 0.9) & fund.iloc[i:i + step].notna().mean().gt(0.5)]
+        alive = window.columns[window.notna().mean() > 0.9]
         if len(alive) < 10:
             continue
         rank = window[alive].mean().sort_values()
