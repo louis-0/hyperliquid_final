@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq wh
 
 from hlq import data, execution, results
 
-CHASSIS = ["BTC", "ETH", "SOL", "NEAR", "HYPE"]
+CHASSIS = ["BTC", "ETH", "SOL", "NEAR", "HYPE", "ZEC"]
 NOTIONALS = [1_000, 10_000, 100_000]
 SAMPLE_EVERY = 60   # roughly one snapshot per minute at the ~1 Hz capture rate
 RESULTS_ROOT = data.DATA_ROOT.parent / "results"
@@ -45,7 +45,9 @@ def coin_slippage(coin: str, root=data.DATA_ROOT) -> dict:
                 slip = execution.walk_book(asks, n, mid)
                 if slip is not None:
                     samples[n].append(slip)
-    return {"coin": coin, "n_files": len(files), "samples": samples}
+    days = sorted({fp.parent.name for fp in files})
+    return {"coin": coin, "n_files": len(files), "samples": samples,
+            "days": (days[0], days[-1]) if days else None}
 
 
 def main(coins: list[str]) -> None:
@@ -60,8 +62,11 @@ def main(coins: list[str]) -> None:
     print("-" * 78)
 
     table: dict[str, dict[str, float]] = {}
+    days: list[str] = []
     for coin in coins:
         r = coin_slippage(coin)
+        if r["days"]:
+            days.extend(r["days"])
         line = f"  {coin:<6} {r['n_files']:>6}"
         for n in NOTIONALS:
             arr = np.asarray(r["samples"][n], dtype=float)
@@ -73,9 +78,10 @@ def main(coins: list[str]) -> None:
         print(line)
 
     if table:
+        span = f"{min(days)}/{max(days)}"
         saved, h = results.record_run(RESULTS_ROOT, "l2_slippage",
-                                      {"coins": list(table), "notionals": NOTIONALS},
-                                      {"median_bps": table})
+                                      {"coins": list(table), "notionals": NOTIONALS, "window": span},
+                                      {"median_bps": table}, span)
         print(f"\n[results] {'recorded' if saved else 'already recorded'} {h}")
 
 

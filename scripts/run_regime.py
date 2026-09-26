@@ -4,7 +4,7 @@
 Classifies each UTC day as bear, calm, or bull from BTC's 30-day rolling return
 (hlq.signals.regime_label), then slices each coin's basis-drift daily net return by regime and
 reports the per-regime annualised Sharpe and return. Coverage is the coins with a Hyperliquid
-spot pair (BTC, ETH, SOL, HYPE).
+spot pair (BTC, ETH, SOL, HYPE, ZEC); a coin's day count per regime follows its own spot window.
 
     python scripts/run_regime.py
     python scripts/run_regime.py BTC ETH
@@ -21,7 +21,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq wh
 from hlq import data, results, signals, stats
 from hlq.costs import CostModel
 
-CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]
+CHASSIS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"]
 COST = CostModel()
 REGIMES = ["bear", "calm", "bull"]
 MIN_DAYS = 10
@@ -69,7 +69,7 @@ def main(coins: list[str]) -> None:
     if table:
         span = f"{regime.index.min():%Y-%m-%d}/{regime.index.max():%Y-%m-%d}"
         saved, h = results.record_run(RESULTS_ROOT, "regime_basis_drift",
-                                      {"coins": list(table), "bear": -0.10, "bull": 0.10},
+                                      {"coins": list(table), "bear": -0.10, "bull": 0.10, "window": span},
                                       {"regime_sharpe": table}, span)
         print(f"[results] {'recorded' if saved else 'already recorded'} {h}")
 

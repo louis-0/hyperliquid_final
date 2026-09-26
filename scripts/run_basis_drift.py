@@ -4,8 +4,9 @@
 Long-spot / short-perp with the full PnL, not just funding: the residual price drift between
 the two legs (the hedge is not perfectly delta-neutral) plus the funding accrued. The drift
 term carries most of the variance and cuts the Sharpe well below the funding-only upper bound.
-Coverage is the coins with a Hyperliquid spot pair (BTC, ETH, SOL, HYPE); NEAR has no spot,
-so the basket excludes it by construction.
+Coverage is the coins with a Hyperliquid spot pair (BTC, ETH, SOL, HYPE, ZEC); NEAR has no
+spot. ZEC is reported per coin and left out of the basket, whose common window would otherwise
+start at ZEC's spot listing.
 
 As in run_chassis.py, the basket is the intersection-window equal-weight mean (hlq.portfolio)
 and the bootstrap CI uses a real block length (hlq.stats).
@@ -25,7 +26,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq wh
 from hlq import data, portfolio, results, signals, stats
 from hlq.costs import CostModel
 
-CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]      # have Hyperliquid spot; NEAR excluded (no spot)
+CHASSIS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"]   # have Hyperliquid spot; NEAR excluded (no spot)
+BASKET_EXCLUDE = ("ZEC",)                        # per-coin row only; spot listed 2026-03-09
 COST = CostModel()
 RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
@@ -69,16 +71,17 @@ def main(coins: list[str]) -> None:
               f"[{r['ci_lo']:>+5.2f}, {r['ci_hi']:>+5.2f}]")
 
     if series:
-        basket = portfolio.equal_weight_basket(series)
+        basket = portfolio.equal_weight_basket(series, exclude=BASKET_EXCLUDE)
         b = summarise(basket)
         print("-" * 88)
         print(f"  {'basket':<6} {b['n']:>6} {'':>10} {b['sr_net']:>9.3f} "
               f"{b['ann_ret']*100:>9.2f}% {b['ann_vol']*100:>9.2f}% "
               f"[{b['ci_lo']:>+5.2f}, {b['ci_hi']:>+5.2f}]")
-        print(f"  (equal-weight over the common window: {list(series)})")
+        print(f"  (equal-weight over the common window: {[c for c in series if c not in BASKET_EXCLUDE]})")
         span = f"{basket.index.min():%Y-%m-%d}/{basket.index.max():%Y-%m-%d}"
         saved, h = results.record_run(RESULTS_ROOT, "basis_drift",
-                                      {"coins": list(series), "round_trip": COST.round_trip()},
+                                      {"coins": list(series), "basket_exclude": list(BASKET_EXCLUDE),
+                                       "round_trip": COST.round_trip(), "window": span},
                                       {"net_sharpe": net, "basket_net_sharpe": round(b["sr_net"], 6)}, span)
         print(f"  [results] {'recorded' if saved else 'already recorded'} {h}")
 
