@@ -26,7 +26,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))  # import hlq wh
 from hlq import data, portfolio, results, signals, stats
 from hlq.costs import CostModel
 
-CHASSIS = ["BTC", "ETH", "SOL", "NEAR", "HYPE"]
+CHASSIS = ["BTC", "ETH", "SOL", "HYPE"]   # the spot-listed coins; NEAR has no Hyperliquid spot pair
 COST = CostModel()
 RESULTS_ROOT = data.DATA_ROOT.parent / "results"
 
