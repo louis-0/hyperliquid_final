@@ -1,0 +1,50 @@
+{
+  "provenance": {
+    "records": [
+      "e6d0a3ffe590cb40",
+      "a9b3757fa11a8680",
+      "3883e5e4d3d9f166"
+    ],
+    "cost_model": "taker 4.5 bp per side; slippage walked from the captured book for the carry and taken from the measured bar spread for the scalp; a hedged toggle pays 18 bp in fees",
+    "carry_notional": 10000.0
+  },
+  "strategies": [
+    {
+      "name": "untimed carry",
+      "window": "2026-06-04/2026-08-22",
+      "round_trips": 3,
+      "per_coin_bps": {
+        "BTC": 64.2,
+        "ETH": 32.44,
+        "HYPE": 143.62
+      },
+      "basket_bps": 80.09,
+      "record": "e6d0a3ffe590cb40"
+    },
+    {
+      "name": "ML-gated carry",
+      "window": "2026-06-22/2026-08-22",
+      "round_trips": 129,
+      "per_coin_bps": {
+        "BTC": -824.74,
+        "ETH": -713.11,
+        "HYPE": -343.31
+      },
+      "basket_bps": -627.05,
+      "record": "a9b3757fa11a8680"
+    },
+    {
+      "name": "imbalance scalp",
+      "window": "2026-06-23/2026-08-22",
+      "round_trips": 162789,
+      "per_coin_bps": {
+        "BTC": -311109.3,
+        "ETH": -312196.5,
+        "HYPE": -402541.7,
+        "SOL": -346225.9
+      },
+      "basket_bps": -343018.3,
+      "record": "3883e5e4d3d9f166"
+    }
+  ]
+}

@@ -63,12 +63,12 @@ Each run records its config and headline numbers under `results/`, keyed by a co
 Tests run off the committed `data_sample/`, so they need no real data:
 
 ```bash
-pytest -q
+pytest
 ```
 
 ## The advisor dashboard
 
-A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and any extra basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario (11 bp round trip, 1 bp per day borrow) returns "marginal". A signal panel shows the per-coin degradation ladder (funding-only, basis-drift, net of fees and borrow) and the macro regime as of the data's last timestamp. A ledger panel puts the three per-trade ledgers side by side (round trips, per-coin and basket nets, record hashes) with their cumulative curves drawn from the committed ledger files. An explainability panel trains the funding-sign model on demand and reports its top SHAP drivers, and a smart-money cohort panel shows a frozen cohort's aggregate net flow and share of turnover per coin, never individual wallets.
+A read-only, cost-aware advisor over `hlq` (FastAPI + Jinja2). The cost-floor calculator lets a user enter their own fee tier, borrow, and any extra basis drift and returns net APR, net Sharpe, and a deploy verdict against the He et al. (2024) anchors (1.8 retail, 3.5 market-maker); the default retail-taker scenario (11 bp round trip, 1 bp per day borrow) returns "marginal". A signal panel shows the per-coin degradation ladder (funding-only, basis-drift, net of fees and borrow) and the macro regime as of the data's last timestamp. A ledger panel puts the three per-trade ledgers side by side (round trips, per-coin and mean nets, record hashes) with their cumulative curves drawn from the committed ledger files. An explainability panel trains the funding-sign model on demand and reports its top SHAP drivers, and a smart-money cohort panel shows a frozen cohort's aggregate net flow and share of turnover per coin, never individual wallets.
 
 ```bash
 uvicorn app.main:app --reload      # then open http://127.0.0.1:8000

@@ -17,12 +17,13 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from app import calc, cohort
+from app import calc, cohort, ledger
 from hlq import data, features, signals, stats, timing
 from hlq.costs import CostModel
 
 BASE = Path(__file__).resolve().parent
 COHORT_SNAPSHOT = BASE / "cohort_snapshot.json"
+LEDGER_SNAPSHOT = BASE / "ledger_snapshot.json"
 COST = CostModel()
 CHASSIS = ["BTC", "ETH", "SOL", "HYPE", "ZEC"]
 BORROW_BPS_DAY = 1.0                     # spot-borrow drag charged per day
@@ -143,6 +144,7 @@ def index(request: Request):
         "coins": coins,
         "retail_anchor": calc.RETAIL_ANCHOR, "mm_anchor": calc.MM_ANCHOR,
         "cohort": cohort.load_snapshot(COHORT_SNAPSHOT),
+        "ledger": ledger.load_snapshot(LEDGER_SNAPSHOT),
     })
 
 

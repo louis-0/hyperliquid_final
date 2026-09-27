@@ -18,6 +18,7 @@ th { color: var(--muted); font-weight: 600; }
 .verdict-deployable { background: #e6f4ea; color: #1e7e34; }
 .verdict-marginal { background: #fff4e0; color: #9a6b00; }
 .verdict-do-not-deploy { background: #fdecea; color: #c0392b; }
+.chart { display: block; width: 100%; height: auto; margin: .8rem 0; border: 1px solid var(--line); }
 footer { border-top: 1px solid var(--line); margin-top: 1.6rem; padding-top: 1rem;
          color: var(--muted); font-size: .85rem; }
 code { background: #eee; padding: .1rem .3rem; border-radius: 3px; }

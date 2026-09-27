@@ -21,6 +21,7 @@ def test_index_renders(client):
     r = client.get("/")
     assert r.status_code == 200
     assert "Cost-floor calculator" in r.text
+    assert "untimed carry" in r.text                              # ledger panel rows from the committed snapshot
 
 
 def test_regime_is_dated_not_implied_live(client):

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Cost-aware funding-carry advisor</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="stylesheet" href="/static/style.css?v=2">
 </head>
 <body>
 <header>
@@ -72,6 +72,39 @@
   </table>
 </section>
 
+<section class="ledger">
+  <h2>Three strategies under one cost model</h2>
+  {% if ledger %}
+  <p class="hint">Per-trade ledgers on the captured window. The untimed carry pays one round trip
+  per coin, the model-gated carry pays one per toggle, and the imbalance scalp pays one per event;
+  every cost is measured from the capture or taken from the fee schedule
+  ({{ ledger.provenance.cost_model }}). Round-trip count, not prediction quality, orders the
+  outcomes. Each cell is the cumulative net in basis points of the notional traded, summed over
+  trades on one unit of notional and not compounded; the last column is the equal-weight mean
+  across the row's coins, which for the carry is the basket of the report's Table 5.6.</p>
+  <table>
+    <thead><tr><th>strategy</th><th>window</th><th>round trips</th><th>BTC</th><th>ETH</th><th>SOL</th><th>HYPE</th><th>mean net (bps)</th></tr></thead>
+    <tbody>
+    {% for s in ledger.strategies %}
+      <tr>
+        <td>{{ s.name }}</td>
+        <td>{{ s.window }}</td>
+        <td>{{ '{:,}'.format(s.round_trips) }}</td>
+        {% for c in ['BTC', 'ETH', 'SOL', 'HYPE'] %}
+        <td>{% if c in s.per_coin_bps %}{{ '{:+,.1f}'.format(s.per_coin_bps[c]) }}{% else %}n/a{% endif %}</td>
+        {% endfor %}
+        <td><strong>{{ '{:+,.1f}'.format(s.basket_bps) }}</strong></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <img class="chart" src="/static/ledger_trilogy.png" style="width: 100%; height: auto" alt="Cumulative net P&amp;L of the three ledgers, drawn from the recorded ledger files">
+  <p class="series">records {{ ledger.provenance.records | join(', ') }}; carry at ${{ '{:,.0f}'.format(ledger.provenance.carry_notional) }} per coin; frozen snapshot, not live.</p>
+  {% else %}
+  <p class="hint">Snapshot not built. Run scripts/build_ledger_snapshot.py and scripts/build_ledger_figure.py.</p>
+  {% endif %}
+</section>
+
 <section class="explain">
   <h2>What drives the funding-timing model</h2>
   <p class="hint">The next-hour funding-sign model (XGBoost) explained with SHAP (Lundberg and
@@ -96,7 +129,7 @@
   {{ cohort.provenance.is_smart_rule }}), applied to this project's captured trade flow over
   {{ cohort.provenance.window_start }} to {{ cohort.provenance.window_end }}. Aggregate only:
   net flow and share of turnover, never individual wallets. Cost caveat: on this tape the flow's
-  top-decile forward move is one to two basis points against a round-trip cost near nine, so it
+  top-decile forward move is under two basis points against a round-trip cost near nine, so it
   is shown as context, not as a trade signal.</p>
   <table>
     <thead><tr><th>coin</th><th>net notional (USD)</th><th>net as % of cohort turnover</th><th>cohort share of turnover</th><th>legs</th></tr></thead>
