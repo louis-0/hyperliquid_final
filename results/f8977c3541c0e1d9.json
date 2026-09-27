@@ -1,0 +1,30 @@
+{
+  "config": {
+    "basket_exclude": [
+      "ZEC"
+    ],
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "ZEC"
+    ],
+    "round_trip": 0.0011,
+    "strategy": "basis_drift",
+    "window": "2026-01-27/2026-08-23"
+  },
+  "config_hash": "f8977c3541c0e1d9",
+  "data_span": "2026-01-27/2026-08-23",
+  "result": {
+    "basket_net_sharpe": 4.2285,
+    "net_sharpe": {
+      "BTC": 4.52898,
+      "ETH": 3.330761,
+      "HYPE": 6.572997,
+      "SOL": -1.65426,
+      "ZEC": 0.656299
+    }
+  },
+  "saved_at": "2026-09-26T14:02:35.741469+00:00"
+}

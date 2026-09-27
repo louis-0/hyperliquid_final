@@ -1,0 +1,47 @@
+{
+  "config": {
+    "bear": -0.1,
+    "bull": 0.1,
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "ZEC"
+    ],
+    "strategy": "regime_basis_drift",
+    "window": "2026-01-27/2026-08-23"
+  },
+  "config_hash": "8495a6b98a83dd38",
+  "data_span": "2026-01-27/2026-08-23",
+  "result": {
+    "regime_sharpe": {
+      "BTC": {
+        "bear": 6.223779,
+        "bull": 2.555554,
+        "calm": 4.433872
+      },
+      "ETH": {
+        "bear": 2.824903,
+        "bull": 4.10831,
+        "calm": 3.341006
+      },
+      "HYPE": {
+        "bear": 11.42829,
+        "bull": 7.405962,
+        "calm": 5.625077
+      },
+      "SOL": {
+        "bear": -1.555869,
+        "bull": 1.404427,
+        "calm": -2.110014
+      },
+      "ZEC": {
+        "bear": -0.437886,
+        "bull": 0.675372,
+        "calm": 1.246126
+      }
+    }
+  },
+  "saved_at": "2026-09-22T15:57:28.942421+00:00"
+}

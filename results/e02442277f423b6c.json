@@ -1,0 +1,53 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE",
+      "ZEC"
+    ],
+    "drop": "SOL",
+    "n_trials": 36,
+    "strategy": "dsr_ablation",
+    "var_sr": 0.169459,
+    "window": "2026-01-27/2026-08-23"
+  },
+  "config_hash": "e02442277f423b6c",
+  "data_span": "2026-01-27/2026-08-23",
+  "result": {
+    "HYPE-only": {
+      "basis": 6.573,
+      "dsr": 0.0,
+      "dsr_b": 0.0,
+      "funding": 24.346,
+      "realistic": 0.5367,
+      "realistic_b": 3.5549
+    },
+    "all-4": {
+      "basis": 4.2285,
+      "dsr": 0.0,
+      "dsr_b": 0.0,
+      "funding": 12.4057,
+      "realistic": -4.9597,
+      "realistic_b": -0.3656
+    },
+    "all-5 (+ZEC)": {
+      "basis": 2.9112,
+      "dsr": 0.0,
+      "dsr_b": 0.0,
+      "funding": 14.137,
+      "realistic": -2.2442,
+      "realistic_b": 0.3335
+    },
+    "drop-SOL": {
+      "basis": 7.118,
+      "dsr": 0.0,
+      "dsr_b": 0.0,
+      "funding": 22.1161,
+      "realistic": -2.6384,
+      "realistic_b": 2.2398
+    }
+  },
+  "saved_at": "2026-08-23T23:01:23.404051+00:00"
+}

@@ -1,0 +1,54 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "hold_bars": 12,
+    "strategy": "obi_ledger",
+    "window": "2026-06-23/2026-08-22"
+  },
+  "config_hash": "3883e5e4d3d9f166",
+  "data_span": "2026-06-23/2026-08-22",
+  "result": {
+    "BTC": {
+      "avg_cost_bps": 9.164,
+      "avg_gross_bps": 0.903,
+      "avg_net_bps": -8.261,
+      "gross_win_pct": 60.7,
+      "net_win_pct": 2.7,
+      "total_net_bps": -311109.3,
+      "trades": 37660
+    },
+    "ETH": {
+      "avg_cost_bps": 9.542,
+      "avg_gross_bps": 1.038,
+      "avg_net_bps": -8.504,
+      "gross_win_pct": 57.1,
+      "net_win_pct": 4.4,
+      "total_net_bps": -312196.5,
+      "trades": 36711
+    },
+    "HYPE": {
+      "avg_cost_bps": 9.265,
+      "avg_gross_bps": 0.63,
+      "avg_net_bps": -8.634,
+      "gross_win_pct": 53.4,
+      "net_win_pct": 9.7,
+      "total_net_bps": -402541.7,
+      "trades": 46622
+    },
+    "SOL": {
+      "avg_cost_bps": 9.163,
+      "avg_gross_bps": 0.879,
+      "avg_net_bps": -8.284,
+      "gross_win_pct": 57.5,
+      "net_win_pct": 4.6,
+      "total_net_bps": -346225.9,
+      "trades": 41796
+    }
+  },
+  "saved_at": "2026-08-26T12:48:38.318300+00:00"
+}

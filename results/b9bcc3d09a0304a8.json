@@ -1,0 +1,26 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "NEAR",
+      "HYPE"
+    ],
+    "round_trip": 0.0011,
+    "strategy": "funding_carry_chassis"
+  },
+  "config_hash": "b9bcc3d09a0304a8",
+  "data_span": "2024-12-05/2026-08-22",
+  "result": {
+    "basket_net_sharpe": 16.336796,
+    "net_sharpe": {
+      "BTC": 14.854448,
+      "ETH": 14.984303,
+      "HYPE": 13.504772,
+      "NEAR": 12.020033,
+      "SOL": 9.2673
+    }
+  },
+  "saved_at": "2026-08-23T21:21:24.055055+00:00"
+}

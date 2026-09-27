@@ -1,0 +1,38 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "HYPE"
+    ],
+    "rt_cost_bps": 18.0,
+    "strategy": "ml_gated_ledger",
+    "window": "2026-06-22/2026-08-22"
+  },
+  "config_hash": "a9b3757fa11a8680",
+  "data_span": "2026-06-22/2026-08-22",
+  "result": {
+    "BTC": {
+      "always_on_net_bps": 111.39,
+      "gated_net_bps": -824.74,
+      "median_hold_h": 2.0,
+      "oos_hours": 1487,
+      "trades": 53
+    },
+    "ETH": {
+      "always_on_net_bps": 105.15,
+      "gated_net_bps": -713.11,
+      "median_hold_h": 4.0,
+      "oos_hours": 1487,
+      "trades": 47
+    },
+    "HYPE": {
+      "always_on_net_bps": 160.3,
+      "gated_net_bps": -343.31,
+      "median_hold_h": 15.0,
+      "oos_hours": 1487,
+      "trades": 29
+    }
+  },
+  "saved_at": "2026-08-24T00:22:56.169578+00:00"
+}

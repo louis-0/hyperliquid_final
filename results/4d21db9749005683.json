@@ -1,0 +1,386 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "drop": "SOL",
+    "strategy": "cost_sweep",
+    "window": "2026-01-27/2026-08-23"
+  },
+  "config_hash": "4d21db9749005683",
+  "data_span": "2026-01-27/2026-08-23",
+  "result": {
+    "cells": [
+      {
+        "ann_ret": 0.05326,
+        "borrow": 0.0,
+        "drift": 0.0,
+        "fee_mult": 1.0,
+        "sharpe": 7.118
+      },
+      {
+        "ann_ret": 0.03501,
+        "borrow": 0.5,
+        "drift": 0.0,
+        "fee_mult": 1.0,
+        "sharpe": 4.679
+      },
+      {
+        "ann_ret": 0.01676,
+        "borrow": 1.0,
+        "drift": 0.0,
+        "fee_mult": 1.0,
+        "sharpe": 2.24
+      },
+      {
+        "ann_ret": -0.01974,
+        "borrow": 2.0,
+        "drift": 0.0,
+        "fee_mult": 1.0,
+        "sharpe": -2.638
+      },
+      {
+        "ann_ret": -0.12924,
+        "borrow": 5.0,
+        "drift": 0.0,
+        "fee_mult": 1.0,
+        "sharpe": -17.273
+      },
+      {
+        "ann_ret": 0.03501,
+        "borrow": 0.0,
+        "drift": 0.5,
+        "fee_mult": 1.0,
+        "sharpe": 4.679
+      },
+      {
+        "ann_ret": 0.01676,
+        "borrow": 0.5,
+        "drift": 0.5,
+        "fee_mult": 1.0,
+        "sharpe": 2.24
+      },
+      {
+        "ann_ret": -0.00149,
+        "borrow": 1.0,
+        "drift": 0.5,
+        "fee_mult": 1.0,
+        "sharpe": -0.199
+      },
+      {
+        "ann_ret": -0.03799,
+        "borrow": 2.0,
+        "drift": 0.5,
+        "fee_mult": 1.0,
+        "sharpe": -5.077
+      },
+      {
+        "ann_ret": -0.14749,
+        "borrow": 5.0,
+        "drift": 0.5,
+        "fee_mult": 1.0,
+        "sharpe": -19.712
+      },
+      {
+        "ann_ret": 0.01676,
+        "borrow": 0.0,
+        "drift": 1.0,
+        "fee_mult": 1.0,
+        "sharpe": 2.24
+      },
+      {
+        "ann_ret": -0.00149,
+        "borrow": 0.5,
+        "drift": 1.0,
+        "fee_mult": 1.0,
+        "sharpe": -0.199
+      },
+      {
+        "ann_ret": -0.01974,
+        "borrow": 1.0,
+        "drift": 1.0,
+        "fee_mult": 1.0,
+        "sharpe": -2.638
+      },
+      {
+        "ann_ret": -0.05624,
+        "borrow": 2.0,
+        "drift": 1.0,
+        "fee_mult": 1.0,
+        "sharpe": -7.517
+      },
+      {
+        "ann_ret": -0.16574,
+        "borrow": 5.0,
+        "drift": 1.0,
+        "fee_mult": 1.0,
+        "sharpe": -22.151
+      },
+      {
+        "ann_ret": -0.01974,
+        "borrow": 0.0,
+        "drift": 2.0,
+        "fee_mult": 1.0,
+        "sharpe": -2.638
+      },
+      {
+        "ann_ret": -0.03799,
+        "borrow": 0.5,
+        "drift": 2.0,
+        "fee_mult": 1.0,
+        "sharpe": -5.077
+      },
+      {
+        "ann_ret": -0.05624,
+        "borrow": 1.0,
+        "drift": 2.0,
+        "fee_mult": 1.0,
+        "sharpe": -7.517
+      },
+      {
+        "ann_ret": -0.09274,
+        "borrow": 2.0,
+        "drift": 2.0,
+        "fee_mult": 1.0,
+        "sharpe": -12.395
+      },
+      {
+        "ann_ret": -0.20224,
+        "borrow": 5.0,
+        "drift": 2.0,
+        "fee_mult": 1.0,
+        "sharpe": -27.029
+      },
+      {
+        "ann_ret": -0.12924,
+        "borrow": 0.0,
+        "drift": 5.0,
+        "fee_mult": 1.0,
+        "sharpe": -17.273
+      },
+      {
+        "ann_ret": -0.14749,
+        "borrow": 0.5,
+        "drift": 5.0,
+        "fee_mult": 1.0,
+        "sharpe": -19.712
+      },
+      {
+        "ann_ret": -0.16574,
+        "borrow": 1.0,
+        "drift": 5.0,
+        "fee_mult": 1.0,
+        "sharpe": -22.151
+      },
+      {
+        "ann_ret": -0.20224,
+        "borrow": 2.0,
+        "drift": 5.0,
+        "fee_mult": 1.0,
+        "sharpe": -27.029
+      },
+      {
+        "ann_ret": -0.31174,
+        "borrow": 5.0,
+        "drift": 5.0,
+        "fee_mult": 1.0,
+        "sharpe": -41.664
+      },
+      {
+        "ann_ret": 0.05134,
+        "borrow": 0.0,
+        "drift": 0.0,
+        "fee_mult": 2.0,
+        "sharpe": 6.861
+      },
+      {
+        "ann_ret": 0.03309,
+        "borrow": 0.5,
+        "drift": 0.0,
+        "fee_mult": 2.0,
+        "sharpe": 4.422
+      },
+      {
+        "ann_ret": 0.01484,
+        "borrow": 1.0,
+        "drift": 0.0,
+        "fee_mult": 2.0,
+        "sharpe": 1.983
+      },
+      {
+        "ann_ret": -0.02166,
+        "borrow": 2.0,
+        "drift": 0.0,
+        "fee_mult": 2.0,
+        "sharpe": -2.895
+      },
+      {
+        "ann_ret": -0.13116,
+        "borrow": 5.0,
+        "drift": 0.0,
+        "fee_mult": 2.0,
+        "sharpe": -17.53
+      },
+      {
+        "ann_ret": 0.03309,
+        "borrow": 0.0,
+        "drift": 0.5,
+        "fee_mult": 2.0,
+        "sharpe": 4.422
+      },
+      {
+        "ann_ret": 0.01484,
+        "borrow": 0.5,
+        "drift": 0.5,
+        "fee_mult": 2.0,
+        "sharpe": 1.983
+      },
+      {
+        "ann_ret": -0.00341,
+        "borrow": 1.0,
+        "drift": 0.5,
+        "fee_mult": 2.0,
+        "sharpe": -0.456
+      },
+      {
+        "ann_ret": -0.03991,
+        "borrow": 2.0,
+        "drift": 0.5,
+        "fee_mult": 2.0,
+        "sharpe": -5.334
+      },
+      {
+        "ann_ret": -0.14941,
+        "borrow": 5.0,
+        "drift": 0.5,
+        "fee_mult": 2.0,
+        "sharpe": -19.969
+      },
+      {
+        "ann_ret": 0.01484,
+        "borrow": 0.0,
+        "drift": 1.0,
+        "fee_mult": 2.0,
+        "sharpe": 1.983
+      },
+      {
+        "ann_ret": -0.00341,
+        "borrow": 0.5,
+        "drift": 1.0,
+        "fee_mult": 2.0,
+        "sharpe": -0.456
+      },
+      {
+        "ann_ret": -0.02166,
+        "borrow": 1.0,
+        "drift": 1.0,
+        "fee_mult": 2.0,
+        "sharpe": -2.895
+      },
+      {
+        "ann_ret": -0.05816,
+        "borrow": 2.0,
+        "drift": 1.0,
+        "fee_mult": 2.0,
+        "sharpe": -7.773
+      },
+      {
+        "ann_ret": -0.16766,
+        "borrow": 5.0,
+        "drift": 1.0,
+        "fee_mult": 2.0,
+        "sharpe": -22.408
+      },
+      {
+        "ann_ret": -0.02166,
+        "borrow": 0.0,
+        "drift": 2.0,
+        "fee_mult": 2.0,
+        "sharpe": -2.895
+      },
+      {
+        "ann_ret": -0.03991,
+        "borrow": 0.5,
+        "drift": 2.0,
+        "fee_mult": 2.0,
+        "sharpe": -5.334
+      },
+      {
+        "ann_ret": -0.05816,
+        "borrow": 1.0,
+        "drift": 2.0,
+        "fee_mult": 2.0,
+        "sharpe": -7.773
+      },
+      {
+        "ann_ret": -0.09466,
+        "borrow": 2.0,
+        "drift": 2.0,
+        "fee_mult": 2.0,
+        "sharpe": -12.651
+      },
+      {
+        "ann_ret": -0.20416,
+        "borrow": 5.0,
+        "drift": 2.0,
+        "fee_mult": 2.0,
+        "sharpe": -27.286
+      },
+      {
+        "ann_ret": -0.13116,
+        "borrow": 0.0,
+        "drift": 5.0,
+        "fee_mult": 2.0,
+        "sharpe": -17.53
+      },
+      {
+        "ann_ret": -0.14941,
+        "borrow": 0.5,
+        "drift": 5.0,
+        "fee_mult": 2.0,
+        "sharpe": -19.969
+      },
+      {
+        "ann_ret": -0.16766,
+        "borrow": 1.0,
+        "drift": 5.0,
+        "fee_mult": 2.0,
+        "sharpe": -22.408
+      },
+      {
+        "ann_ret": -0.20416,
+        "borrow": 2.0,
+        "drift": 5.0,
+        "fee_mult": 2.0,
+        "sharpe": -27.286
+      },
+      {
+        "ann_ret": -0.31366,
+        "borrow": 5.0,
+        "drift": 5.0,
+        "fee_mult": 2.0,
+        "sharpe": -41.921
+      }
+    ],
+    "central": {
+      "ann_ret": -0.01974,
+      "ci": [
+        -4.952,
+        -0.669
+      ],
+      "sharpe": -2.638
+    },
+    "plausible_positive": 6,
+    "plausible_total": 16,
+    "stress": {
+      "sharpe": -41.921
+    },
+    "zero_cost": {
+      "sharpe": 7.118
+    }
+  },
+  "saved_at": "2026-08-23T22:30:47.043346+00:00"
+}

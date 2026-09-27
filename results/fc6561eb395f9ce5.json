@@ -1,0 +1,122 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "models": [
+      "xgboost",
+      "random_forest",
+      "logistic"
+    ],
+    "seed": 42,
+    "strategy": "ml_feasibility",
+    "train_frac": 0.7,
+    "window": "2026-01-28/2026-08-22"
+  },
+  "config_hash": "fc6561eb395f9ce5",
+  "data_span": "2026-01-28/2026-08-22",
+  "result": {
+    "per_coin": {
+      "BTC": {
+        "lead_driver": "funding_lag_1",
+        "lead_share": 1.0,
+        "logistic": {
+          "acc": 0.9032,
+          "auc": 0.8844
+        },
+        "majority_acc": 0.8951,
+        "naive_rmse": 4.869345484328447e-06,
+        "random_forest": {
+          "acc": 0.8978,
+          "auc": 0.8773
+        },
+        "top_drivers": [
+          "funding_lag_1",
+          "funding_roll_mean_24",
+          "basis"
+        ],
+        "xgb_rmse": 8.489874907137972e-06,
+        "xgboost": {
+          "acc": 0.8924,
+          "auc": 0.8848
+        }
+      },
+      "ETH": {
+        "lead_driver": "funding_lag_1",
+        "lead_share": 1.0,
+        "logistic": {
+          "acc": 0.9328,
+          "auc": 0.9434
+        },
+        "majority_acc": 0.8709,
+        "naive_rmse": 5.670492086316834e-06,
+        "random_forest": {
+          "acc": 0.9368,
+          "auc": 0.9446
+        },
+        "top_drivers": [
+          "funding_lag_1",
+          "funding_roll_std_24",
+          "funding_roll_mean_24"
+        ],
+        "xgb_rmse": 9.076647179102409e-06,
+        "xgboost": {
+          "acc": 0.9213,
+          "auc": 0.9352
+        }
+      },
+      "HYPE": {
+        "lead_driver": "basis",
+        "lead_share": 1.0,
+        "logistic": {
+          "acc": 0.9375,
+          "auc": 0.8834
+        },
+        "majority_acc": 0.9334,
+        "naive_rmse": 1.3147501103369678e-05,
+        "random_forest": {
+          "acc": 0.9388,
+          "auc": 0.891
+        },
+        "top_drivers": [
+          "basis",
+          "basis_lag_1",
+          "funding_roll_mean_24"
+        ],
+        "xgb_rmse": 1.2264195947351072e-05,
+        "xgboost": {
+          "acc": 0.9328,
+          "auc": 0.8824
+        }
+      },
+      "SOL": {
+        "lead_driver": "funding_lag_1",
+        "lead_share": 1.0,
+        "logistic": {
+          "acc": 0.8736,
+          "auc": 0.8858
+        },
+        "majority_acc": 0.2024,
+        "naive_rmse": 8.262132706869617e-06,
+        "random_forest": {
+          "acc": 0.8816,
+          "auc": 0.8936
+        },
+        "top_drivers": [
+          "funding_lag_1",
+          "funding_roll_std_24",
+          "basis_lag_1"
+        ],
+        "xgb_rmse": 1.6640814343433408e-05,
+        "xgboost": {
+          "acc": 0.8756,
+          "auc": 0.891
+        }
+      }
+    }
+  },
+  "saved_at": "2026-09-22T15:57:56.584219+00:00"
+}

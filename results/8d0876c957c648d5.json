@@ -1,0 +1,18 @@
+{
+  "config": {
+    "hold_d": 30,
+    "lookback_d": 30,
+    "strategy": "perp_dispersion",
+    "window": "2026-02-26/2026-08-22"
+  },
+  "config_hash": "8d0876c957c648d5",
+  "data_span": "2026-02-26/2026-08-22",
+  "result": {
+    "gross_ret": 0.21591,
+    "gross_sharpe": 0.922,
+    "net_ret": 0.18914,
+    "net_sharpe": 0.807,
+    "rebalances": 6
+  },
+  "saved_at": "2026-08-23T23:10:08.493162+00:00"
+}

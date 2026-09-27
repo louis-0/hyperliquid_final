@@ -1,0 +1,58 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "drop": "SOL",
+    "n_trials": {
+      "all": 24,
+      "hedged": 18
+    },
+    "strategy": "baselines_head_to_head",
+    "window": "2026-01-28/2026-08-22"
+  },
+  "config_hash": "e4ab5b8125af8d51",
+  "data_span": "2026-01-28/2026-08-22",
+  "result": {
+    "basis-drift (drop-SOL)": {
+      "ann_ret": 0.054766,
+      "ann_sharpe": 7.328,
+      "dsr_all": 0.0,
+      "dsr_hedged": 0.4327
+    },
+    "buy-and-hold BTC": {
+      "ann_ret": -0.139916,
+      "ann_sharpe": -0.2869,
+      "dsr_all": 0.0,
+      "dsr_hedged": 0.0
+    },
+    "equal-weight spot": {
+      "ann_ret": 0.359561,
+      "ann_sharpe": 0.6172,
+      "dsr_all": 0.0,
+      "dsr_hedged": 0.0
+    },
+    "naive carry (drop-SOL)": {
+      "ann_ret": 0.055681,
+      "ann_sharpe": 22.0198,
+      "dsr_all": 0.9978,
+      "dsr_hedged": 1.0
+    },
+    "realistic (drop-SOL)": {
+      "ann_ret": -0.018234,
+      "ann_sharpe": -2.4397,
+      "dsr_all": 0.0,
+      "dsr_hedged": 0.0
+    },
+    "realistic-B (drop-SOL)": {
+      "ann_ret": 0.018266,
+      "ann_sharpe": 2.4441,
+      "dsr_all": 0.0,
+      "dsr_hedged": 0.0001
+    }
+  },
+  "saved_at": "2026-09-22T15:57:33.440850+00:00"
+}

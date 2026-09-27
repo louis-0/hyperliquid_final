@@ -1,0 +1,86 @@
+{
+  "config": {
+    "cohort": "wallet_labels_2026-06-23.parquet",
+    "coins": [
+      "BTC",
+      "ETH",
+      "SOL",
+      "HYPE"
+    ],
+    "strategy": "fused_ml",
+    "window": "2026-06-12/2026-08-22"
+  },
+  "config_hash": "179edc83541cc24b",
+  "data_span": "2026-06-12/2026-08-22",
+  "result": {
+    "BTC": {
+      "candle": {
+        "acc": 0.8687,
+        "auc": 0.8157
+      },
+      "drivers": [
+        "premium_mean",
+        "premium_last",
+        "basis_lag_4"
+      ],
+      "fused": {
+        "acc": 0.9981,
+        "auc": 0.9877
+      },
+      "majority_acc": 0.8726,
+      "n_test": 518
+    },
+    "ETH": {
+      "candle": {
+        "acc": 0.9093,
+        "auc": 0.7789
+      },
+      "drivers": [
+        "premium_mean",
+        "funding_lag_4",
+        "basis_lag_24"
+      ],
+      "fused": {
+        "acc": 0.9961,
+        "auc": 0.9776
+      },
+      "majority_acc": 0.917,
+      "n_test": 518
+    },
+    "HYPE": {
+      "candle": {
+        "acc": 0.9035,
+        "auc": 0.8436
+      },
+      "drivers": [
+        "premium_mean",
+        "funding_roll_std_24",
+        "hour_sin"
+      ],
+      "fused": {
+        "acc": 0.9981,
+        "auc": 0.9913
+      },
+      "majority_acc": 0.9112,
+      "n_test": 518
+    },
+    "SOL": {
+      "candle": {
+        "acc": 0.8803,
+        "auc": 0.7558
+      },
+      "drivers": [
+        "premium_mean",
+        "premium_last",
+        "spot_ret_24h"
+      ],
+      "fused": {
+        "acc": 0.9961,
+        "auc": 0.9927
+      },
+      "majority_acc": 0.9035,
+      "n_test": 518
+    }
+  },
+  "saved_at": "2026-09-26T18:31:07.989088+00:00"
+}

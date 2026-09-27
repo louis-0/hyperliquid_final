@@ -1,0 +1,37 @@
+{
+  "config": {
+    "coins": [
+      "BTC",
+      "ETH",
+      "HYPE"
+    ],
+    "notional": 10000.0,
+    "strategy": "carry_ledger",
+    "window": "2026-06-04/2026-08-22"
+  },
+  "config_hash": "e6d0a3ffe590cb40",
+  "data_span": "2026-06-04/2026-08-22",
+  "result": {
+    "BTC": {
+      "net_bps": 64.2,
+      "slip_in_bps": 0.079,
+      "slip_out_bps": 0.065
+    },
+    "ETH": {
+      "net_bps": 32.44,
+      "slip_in_bps": 0.278,
+      "slip_out_bps": 0.207
+    },
+    "HYPE": {
+      "net_bps": 143.62,
+      "slip_in_bps": 0.987,
+      "slip_out_bps": 0.861
+    },
+    "basket": {
+      "ann_ret": 0.03654,
+      "ann_sharpe": 4.951,
+      "net_bps": 80.09
+    }
+  },
+  "saved_at": "2026-08-23T23:08:46.273640+00:00"
+}
